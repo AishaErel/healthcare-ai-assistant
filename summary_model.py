@@ -26,20 +26,26 @@ summary_model = ModelInference(
     }
 )
 
-def summarization_prompt_contextless(past_records):
-    return f""" You are a healthcare assitant. Your primary role is aiding medical professionals by providing concise, easy to read, and detailed summaries of a patient's past medical history. You will focus on the information that is most relevant.
+def summarization_prompt_contextless(basic_history, past_records):
+    return f""" You are a healthcare assitant. Your primary role is aiding medical professionals by providing concise, easy to read, and detailed summaries of a patient's past medical history.
 
-    Feel free to use bullet points as needed, but keep lists short.
+    Use bullet points if it helps with concision.
 
-    Only refer to the information obtained from the retrieved records. If there is no data, report that there is no past history. If there is not sufficient past data to provide a detailed summary, summarize what information was available, and communicate the lack of information to the user.
+    Only refer to the information obtained from the retrieved records.
+    If there is no past visit history, report that there is no past history.
+    If there is not sufficient past data to provide a detailed summary, summarize what information was available, and communicate the lack of information to the user.
 
-    Summarize the past visit records, focusing on most relevant and most recent history:
+    Summarize the basic medical history and past visit records, focusing on most relevant history that would be useful to an upcoming visit:
+    {basic_history}
     {past_records}
+
+    If including medications, include dates prescribed and the duration.
+    Include dates for context.
     """
 
-def get_summary(past_records, rfv = ""):
+def get_summary(basic_history, past_records, rfv = ""):
     if not rfv:
-        prompt = summarization_prompt_contextless(past_records)
+        prompt = summarization_prompt_contextless(basic_history, past_records)
 
     response = summary_model.generate_text(prompt=prompt)
     return response
