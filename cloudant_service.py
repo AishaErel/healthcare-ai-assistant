@@ -6,17 +6,24 @@ load_dotenv()
 
 CLOUDANT_URL = os.getenv("CLOUDANT_URL")
 CLOUDANT_APIKEY = os.getenv("CLOUDANT_APIKEY")
+CLOUDANT_APIKEY_READER = os.getenv("CLOUDANT_APIKEY_READER")
 CLOUDANT_DB = os.getenv("CLOUDANT_DB")
 
-def get_iam_token():
+def get_iam_token(reader = 1):
     token_url = "https://iam.cloud.ibm.com/identity/token"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded"
     }
-    data = {
-        "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
-        "apikey": CLOUDANT_APIKEY
-    }
+    if (reader):
+        data = {
+            "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
+            "apikey": CLOUDANT_APIKEY_READER
+        }
+    else:
+        data = {
+            "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
+            "apikey": CLOUDANT_APIKEY
+        }
 
     response = requests.post(token_url, headers=headers, data=data)
     response.raise_for_status()
