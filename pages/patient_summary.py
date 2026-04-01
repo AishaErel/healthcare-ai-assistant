@@ -19,6 +19,6 @@ visits = patient.get("previous_visits", [])
 
 try:
     summary = get_summary(history, visits)
-    st.text_area("Past Visit Summary", value=summary, height=300)
+    st.text_area("Past Visit Summary", value=summary, height=700)
 except Exception as e:
     st.error(f"Error: {e}")
