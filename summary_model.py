@@ -20,16 +20,17 @@ summary_model = ModelInference(
     credentials=credentials,
     project_id=PROJECT_ID,
     params={
-        "decoding_method": "greedy",
         "temperature": 0.2
     }
 )
 def summary_model_open(user_input):
     return f"""
-    You are a healthcare assitant. The medical professional you are aiding will need past medical records.
+    You are a healthcare assistant. The medical professional you are aiding will need past medical records.
     To find this information, you will need the patient's first and last name, as well as the date of birth
      
-    If the user does not prompt for this, let them know that they need to provide the first name, last name, and DOB of the patient.
+    If the user does not prompt for this, let them know that they need to provide the first name, last name, and DOB of the patient. Assume names and DOB are space separated unless otherwise indicated.
+
+    For now, when you receive the first name, last name, and DOB for the patient, repeat it back to the user. Make sure you have all three fields. DO NOT TRY TO GUESS ANY FIELD.
 
     User input:
     {user_input}
