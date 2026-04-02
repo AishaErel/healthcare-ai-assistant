@@ -15,10 +15,12 @@ st.write(f"Gender: {patient.get('gender', '')}")
 st.write(f"Age: {patient.get('age', '')}")
 
 history = patient.get("basic_medical_history", {})
+
 visits = patient.get("previous_visits", [])
 
 try:
     summary = get_summary(history, visits)
-    st.text_area("Past Visit Summary", value=summary, height=700)
+    print(summary)
+    st.text_area("Past Visit Summary", value=summary, height=500)
 except Exception as e:
     st.error(f"Error: {e}")
