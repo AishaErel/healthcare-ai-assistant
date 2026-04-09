@@ -31,7 +31,7 @@ if st.button("Generate SOAP Record"):
     if doctor_notes.strip():
         with st.spinner("Generating SOAP note..."):
             try:
-                result = generate_soap(doctor_notes, patient_body_temp,patient_pulse_rate, patient_blood_pressure, doctor_notes ) # missing patient history information into model
+                result = generate_soap(doctor_notes, (patient_body_temp,patient_pulse_rate, patient_blood_pressure, doctor_notes) ) # missing patient history information into model
                 st.subheader("Generated SOAP Note")
                 st.text_area("SOAP Output", value=result, height=300)
             except Exception as e:

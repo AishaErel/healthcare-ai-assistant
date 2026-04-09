@@ -8,7 +8,7 @@ load_dotenv()
 API_KEY = os.getenv("WATSONX_APIKEY")
 URL = os.getenv("WATSONX_URL")
 PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
-MODEL_ID = os.getenv("WATSONX_MODEL_ID", "ibm/granite-3-8b-instruct")
+MODEL_ID = os.getenv("WATSONX_MODEL_ID")
 
 credentials = Credentials(
     url=URL,
