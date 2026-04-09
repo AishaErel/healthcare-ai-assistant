@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai import Credentials
+from cloudant_service import search_patient
 
 load_dotenv()
 
@@ -42,10 +43,32 @@ def summarization_prompt_contextless(basic_history, past_records):
 def get_summary(basic_history, past_records, rfv = ""):
     if not rfv:
         prompt = summarization_prompt_contextless(basic_history, past_records)
-    #print(prompt)
+    print(prompt)
     response = summary_model.generate_text(params={
 		"decoding_method": "greedy",
 		"max_new_tokens": 300
 	}, prompt=prompt)
     print(response)
     return response
+
+def get_patient_info_summary_contextless(first_name, last_name, date_of_birth):
+    """
+    Searches the database for patient information and history, and returns a tuple: (patient info, patient history). Used when only giver name and DOB
+
+    Parameters:
+    - first_name (str): The patient's first name.
+    - last_name (str): The patient's last name.
+    - date_of_birth (str): The patient's date of birth.
+
+    Returns:
+    - tuple: A tuple containing patient info and history.
+    """
+    try:
+        print("Function called--trying")
+        patient_info = search_patient(first_name, last_name, date_of_birth)[0]
+        basic_medical_info = (first_name, last_name, date_of_birth, patient_info.get('gender'), patient_info.get('age'), patient_info.get('basic_medical_history', []))
+        past_visit_history = patient_info.get('previous_visits', [])
+        return get_summary(basic_medical_info, past_visit_history);
+    except Exception as e:
+        print(f'Error fetching medical data: {e}')
+        return ("There was a problem searching the database")

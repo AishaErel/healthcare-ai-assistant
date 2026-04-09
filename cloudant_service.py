@@ -30,6 +30,18 @@ def get_iam_token(reader = 1):
     return response.json()["access_token"]
 
 def search_patient(first_name, last_name, date_of_birth):
+    """
+    Searches the database for patient information and history
+
+    Parameters:
+    - first_name (str): The patient's first name.
+    - last_name (str): The patient's last name.
+    - date_of_birth (str): The patient's date of birth.
+
+    Returns:
+    - json: A json containing all the patient medical information and medical history.
+    """
+    print("Getting info for " + first_name + " " + last_name)
     token = get_iam_token()
 
     url = f"{CLOUDANT_URL}/{CLOUDANT_DB}/_find"
@@ -46,7 +58,6 @@ def search_patient(first_name, last_name, date_of_birth):
             "date_of_birth": date_of_birth
         }
     }
-
     response = requests.post(url, json=query, headers=headers)
     response.raise_for_status()
     return response.json().get("docs", [])
