@@ -60,12 +60,10 @@ def get_summary(basic_history, past_records, rfv = ""):
         prompt = summarization_prompt_contextless(basic_history, past_records)
     else:
         prompt = summarization_prompt_context(basic_history, past_records, rfv)
-    print(prompt)
     response = summary_model.generate_text(params={
 		"decoding_method": "greedy",
 		"max_new_tokens": 300
 	}, prompt=prompt)
-    print(response)
     return response
 
 def get_patient_info_summary_contextless(first_name, last_name, date_of_birth):
@@ -112,17 +110,21 @@ def get_patient_info_summary_context(first_name, last_name, date_of_birth, rfv):
     except Exception as e:
         print(f'Error fetching medical data: {e}')
         return ("There was a problem searching the database")
-    
-def missing_info(first_name = "", last_name = "", date_of_birth = ""):
+
+def missing_info(first_name, last_name, date_of_birth):
     """
     Used to figure out what information the user didn't provide that is needed for the database query.
      Parameters:
-    - first_name (str): The patient's first name, or an empty string if missing.
-    - last_name (str): The patient's last name, or an empty string if missing.
-    - date_of_birth (str): The patient's date of birth, or an empty string if missing.
+    - first_name (str): The patient's first name, or null
+    - last_name (str): The patient's last name, or null.
+    - date_of_birth (str): The patient's date of birth, or null
 
     Returns:
     - str: notice to user so that they can provide the missing information
     """
-    print("In the function")
-    return ("Missing some info. Please provide the missing info")
+    print(first_name, last_name, date_of_birth)
+    missing = "Some info is missing. Please provide the patient's"
+    if not first_name: missing += " first name"
+    if not last_name: missing += " last name"
+    if not date_of_birth: missing += " date_of_birth"
+    return missing
