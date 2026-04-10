@@ -1,15 +1,17 @@
 import streamlit as st
 import json
 from langchain_ibm.chat_models import convert_to_openai_tool
-from summary_model import summary_model, get_patient_info_summary_contextless
+from summary_model import summary_model, missing_info, get_patient_info_summary_contextless, get_patient_info_summary_context
 
 names_to_functions = {
+    "missing_info": missing_info,
     "get_patient_info_summary_contextless": get_patient_info_summary_contextless,
+    "get_patient_info_summary_context": get_patient_info_summary_context,
 }
 
-tools = [convert_to_openai_tool(get_patient_info_summary_contextless)]
+tools = [convert_to_openai_tool(missing_info), convert_to_openai_tool(get_patient_info_summary_contextless), convert_to_openai_tool(get_patient_info_summary_context)]
 
-tool_choice = {"type": "function", "function": {"name": "get_patient_info_summary_contextless"}}
+tool_choice = "auto"
 
 st.title("Summarization Helper")
 
@@ -53,14 +55,18 @@ if st.session_state.messages[-1]["role"] != "assistant":
                         function_name = tool_call[0]["function"]["name"]
                         function_params = json.loads(tool_call[0]["function"]["arguments"])
                         print(f"Executing function: `{function_name}`, with parameters: {function_params}")
+                        func = names_to_functions[function_name]
                         print("tool call")
-                        function_result = names_to_functions[function_name](**function_params)
+                        function_result = func(**function_params)
+                        print("tool call succeeded")
                         st.write(function_result)
+                        message = {"role": "assistant", "content":function_result}
                     else:
                         st.write(response_stream["choices"][0]["message"]["content"])
+                        message = {"role": "assistant", "content": response_stream["choices"][0]["message"]["content"]}
                 except:
                     st.error("An error has occurred. We're trying again")
-        message = {"role": "assistant", "content": response_stream["choices"][0]["message"]["content"]}
+        
         # Add response to message history
         st.session_state.messages.append(message)
 print(st.session_state.messages)
