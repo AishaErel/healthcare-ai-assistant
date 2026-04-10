@@ -79,7 +79,6 @@ def get_patient_info_summary_contextless(first_name, last_name, date_of_birth):
     - str: summary of patient medical information and history
     """
     try:
-        print("Function called--trying")
         patient_info = search_patient(first_name, last_name, date_of_birth)[0]
         basic_medical_info = (first_name, last_name, date_of_birth, patient_info.get('gender'), patient_info.get('age'), patient_info.get('basic_medical_history', []))
         past_visit_history = patient_info.get('previous_visits', [])
@@ -102,7 +101,6 @@ def get_patient_info_summary_context(first_name, last_name, date_of_birth, rfv):
     - str: summary of patient medical information and history that is relevant to the reason for visit
     """
     try:
-        print("Function called--trying")
         patient_info = search_patient(first_name, last_name, date_of_birth)[0]
         basic_medical_info = (first_name, last_name, date_of_birth, patient_info.get('gender'), patient_info.get('age'), patient_info.get('basic_medical_history', []))
         past_visit_history = patient_info.get('previous_visits', [])
@@ -126,5 +124,5 @@ def missing_info(first_name, last_name, date_of_birth):
     missing = "Some info is missing. Please provide the patient's"
     if not first_name: missing += " first name"
     if not last_name: missing += " last name"
-    if not date_of_birth: missing += " date_of_birth"
+    if not date_of_birth: missing += " date of birth"
     return missing

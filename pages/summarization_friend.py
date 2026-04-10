@@ -12,7 +12,6 @@ names_to_functions = {
 tools = [convert_to_openai_tool(missing_info), convert_to_openai_tool(get_patient_info_summary_contextless), convert_to_openai_tool(get_patient_info_summary_context)]
 
 tool_choice = "auto"
-print(json.dumps(tool_choice, indent = 4))
 
 st.title("Summarization Helper")
 
@@ -54,10 +53,10 @@ if st.session_state.messages[-1]["role"] != "assistant":
                         function_name = tool_call[0]["function"]["name"]
                         function_params = json.loads(tool_call[0]["function"]["arguments"])
                         if(type(function_params) == str):
-                            print(function_params)
                             function_params = json.loads(function_params)
                         print(f"Executing function: `{function_name}`, with parameters: {function_params}")
                         function_result = names_to_functions[function_name](**function_params)
+                        print(function_result)
                         print("tool call succeeded")
                         st.write(function_result)
                         message = {"role": "assistant", "content":function_result}
