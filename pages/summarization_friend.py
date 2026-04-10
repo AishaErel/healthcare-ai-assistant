@@ -55,9 +55,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                         function_name = tool_call[0]["function"]["name"]
                         function_params = json.loads(tool_call[0]["function"]["arguments"])
                         print(f"Executing function: `{function_name}`, with parameters: {function_params}")
-                        func = names_to_functions[function_name]
-                        print("tool call")
-                        function_result = func(**function_params)
+                        function_result = names_to_functions[function_name](**function_params)
                         print("tool call succeeded")
                         st.write(function_result)
                         message = {"role": "assistant", "content":function_result}
