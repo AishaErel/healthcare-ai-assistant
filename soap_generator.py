@@ -1,40 +1,55 @@
-import streamlit as st
-from watsonx_service import generate_soap
+# import streamlit as st
+# from watsonx_service import generate_soap
+# from patient_context_for_model import build_patient_context_text
+# st.write("SOAP GENERATOR PAGE IS RUNNING")
+# st.set_page_config(
+#     page_title="Care.AI SOAP Generator",
+#     layout="wide"
+# )
 
-st.set_page_config(page_title="Welcome Doctor ... , My name is Care.AI. I am your personal Healthcare AI Assistant", layout="wide")
+# st.title("Healthcare AI Assistant")
+# st.write("Convert messy doctor notes into SOAP-format medical records.")
 
-st.title("Healthcare AI Assistant")
-st.write("Convert messy doctor notes into SOAP-format medical records.")
+# # Check whether patient data made it to this page
+# patient = st.session_state.get("selected_patient")
 
-patient_body_temp= st.text_area(
-    "Please write patient Body Temperature in F",
-    placeholder=" "
-)
-patient_pulse_rate = st.text_area(
-    "Please write Pulse Rate",
-    placeholder=" "
-)
-patient_blood_pressure = st.text_area(
-    "Please write Blood Pressure",
-    placeholder=" "
-)
+# if patient:
+#     st.success("Patient record transferred successfully to SOAP Generator.")
+#     st.info(
+#         f"Current patient: {patient.get('first_name', '')} {patient.get('last_name', '')} | "
+#         f"DOB: {patient.get('date_of_birth', '')} | "
+#         f"Age: {patient.get('age', '')}"
+#     )
+# else:
+#     st.error("No patient record was transferred. Please go back and select a patient first.")
+#     st.stop()
 
-# TO DO, do function of patient_history
-# retrive patient_history (past visits plus pastSOAP and feed into AI model as well)
+# patient_context = build_patient_context_text(patient)
 
-doctor_notes = st.text_area(
-    "Doctor's Raw Notes",
-    placeholder="Example: 45F cough 3d fever mild sob no cp throat red chest clear likely uri rest fluids paracetamol f/u if worse"
-)
+# with st.expander("Patient Context Loaded for AI"):
+#     st.text_area("Context", value=patient_context, height=250, disabled=True)
 
-if st.button("Generate SOAP Record"): 
-    if doctor_notes.strip():
-        with st.spinner("Generating SOAP note..."):
-            try:
-                result = generate_soap(doctor_notes, patient_body_temp,patient_pulse_rate, patient_blood_pressure, doctor_notes ) # missing patient history information into model
-                st.subheader("Generated SOAP Note")
-                st.text_area("SOAP Output", value=result, height=300)
-            except Exception as e:
-                st.error(f"Error: {e}")
-    else:
-        st.warning("Please enter doctor notes first.")
+# st.subheader("Current Visit Information")
+
+# patient_body_temp = st.text_area("Body Temperature (F)", placeholder="98.6")
+# patient_pulse_rate = st.text_area("Pulse Rate", placeholder="72")
+# patient_blood_pressure = st.text_area("Blood Pressure", placeholder="120/80")
+# doctor_notes = st.text_area("Doctor's Raw Notes")
+
+# if st.button("Generate SOAP Record"):
+#     if doctor_notes.strip():
+#         with st.spinner("Generating SOAP note..."):
+#             try:
+#                 result = generate_soap(
+#                     raw_notes=doctor_notes,
+#                     patient_body_temp=patient_body_temp,
+#                     patient_pulse_rate=patient_pulse_rate,
+#                     patient_blood_pressure=patient_blood_pressure,
+#                     patient_context=patient_context
+#                 )
+#                 st.subheader("Generated SOAP Note")
+#                 st.text_area("SOAP Output", value=result, height=300)
+#             except Exception as e:
+#                 st.error(f"Error: {e}")
+#     else:
+#         st.warning("Please enter doctor notes first.")

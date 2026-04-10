@@ -5,7 +5,7 @@ st.title("Patient Record")
 # Get selected patient from session
 patient = st.session_state.get("selected_patient")
 
-if patient:
+if patient: #demographic info
 
     st.success("Patient loaded successfully.")
 
@@ -20,7 +20,7 @@ if patient:
     st.write("### Medical History")
     history = patient.get("basic_medical_history", {})
 
-    if history:
+    if history: #allergies, etc
         st.json(history)
     else:
         st.info("No medical history available.")
@@ -28,9 +28,9 @@ if patient:
     # Previous visits (if stored inside patient)
     st.write("### Previous Visits")
 
-    visits = patient.get("previous_visits", [])
+    visits = patient.get("previous_visits", []) 
 
-    if visits:
+    if visits: #previous info on soap from previous visits
         for visit in visits:
             st.write(f"Date: {visit.get('date', '')}")
             soap = visit.get("soap_note", {})
@@ -59,3 +59,5 @@ if patient:
 
 else:
     st.warning("No patient selected. Please search for a patient first.")
+
+
