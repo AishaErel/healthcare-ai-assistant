@@ -26,21 +26,36 @@ model = ModelInference(
     }
 )
 
-def build_soap_prompt(raw_notes, patient_context=""):
+def clean_text(value):
+    """Convert tuples/None/other types safely into clean strings."""
+    if value is None:
+        return ""
+    if isinstance(value, tuple):
+        value = value[0] if value else ""
+    return str(value).strip()
+
+def build_soap_prompt(
+    raw_notes,
+    patient_body_temp="",
+    patient_pulse_rate="",
+    patient_blood_pressure="",
+    patient_history="",
+    patient_context =""
+):
+    notes = clean_text(raw_notes)
+    temp = clean_text(patient_body_temp)
+    pulse = clean_text(patient_pulse_rate)
+    bp = clean_text(patient_blood_pressure)
+    history = clean_text(patient_history)
+    context = clean_text(patient_context)
+
     return f"""
-You are a 24/7 available, intelligent, educated AI healthcare documentation assistant. Doctor may ask you about healthcare related questions
-or may ask your opinion on specific drug or illness, make educated guesses based on your knwoledge and if you are not sure about it state that you are not sure
-
-When doctor asks, convert the doctor's shorthand notes into a SOAP medical record.
-
-Rules:
-- Do not invent facts
-- Do not add new information such as blood pressure, temperature (if those are not provided leave as blank)
-- Expand abbreviations only when clear
-- Keep the output concise and clinical
-- If information is missing, (including blood pressure, temparture, etc) values write "Not specified"
-
-Return only in this format:
+You are a medical documentation assistant.
+Convert the following clinical information into a SOAP note.
+If patient has provided history and visists, use that information to guide you as a medical record.
+Do not treat past symptoms or findings as current unless mentioned in today's notes.
+Prioritize today's doctor notes and structured vitals.
+Use this structure exactly:
 
 Subjective:
 ...
@@ -54,14 +69,47 @@ Assessment:
 Plan:
 ...
 
-Patient context:
-{patient_context}
+Rules:
+- Do not invent facts.
+- Use the structured vitals as the source of truth if they conflict with free-text notes.
+- Do not add blood pressure, temperature, pulse, or other values unless they are provided.
+- Summarize repetitive negatives instead of listing all of them.
+- Ignore duplicated or nonsensical phrases.
+- Expand abbreviations only when clear.
+- Keep the output concise, clinical, and readable.
+- If information is missing, write "Not specified".
+- Return only the SOAP note and nothing else.
 
-Doctor notes:
-{raw_notes}
+Patient History:
+{history if history else "Not specified"}
+Patient Context:
+{context if context else "Not specified"}
+
+Structured Vitals:
+- Temperature: {temp if temp else "Not specified"}
+- Pulse Rate: {pulse if pulse else "Not specified"}
+- Blood Pressure: {bp if bp else "Not specified"}
+
+Doctor Notes:
+{notes if notes else "Not specified"}
 """.strip()
 
-def generate_soap(raw_notes, patient_context=""):
-    prompt = build_soap_prompt(raw_notes, patient_context)
+def generate_soap(
+    raw_notes,
+    patient_body_temp="",
+    patient_pulse_rate="",
+    patient_blood_pressure="",
+    patient_history="",
+    patient_context ="",
+):
+    prompt = build_soap_prompt(
+        raw_notes=raw_notes,
+        patient_body_temp=patient_body_temp,
+        patient_pulse_rate=patient_pulse_rate,
+        patient_blood_pressure=patient_blood_pressure,
+        patient_history=patient_history,
+        patient_context =patient_context
+    )
+
     response = model.generate_text(prompt=prompt)
     return response
