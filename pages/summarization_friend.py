@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 from langchain_ibm.chat_models import convert_to_openai_tool
-from summary_model import summary_model, missing_info, get_patient_info_summary_contextless, get_patient_info_summary_context
+from summary_model import nlp_model, missing_info, get_patient_info_summary_contextless, get_patient_info_summary_context
 
 names_to_functions = {
     "missing_info": missing_info,
@@ -18,7 +18,7 @@ st.title("Summarization Helper")
 if "messages" not in st.session_state.keys():  # Initialize the chat messages history
     st.session_state.messages = [
         { "role": "system",
-        "content": "You are a healthcare assistant. The medical professional you are aiding will need past medical records. To find this information, you will need the patient's first and last name, as well as the date of birth. If the user does not provide this, the user will need to be notified that they are missing info. Assume names and DOB are space separated unless otherwise indicated. Make sure you have all three fields, as all three are needed to search the database. DO NOT TRY TO GUESS ANY FIELD. Once you have the required information, search the database for the patient info."
+        "content": "You are a healthcare assistant. The medical professional you are aiding will need past medical records. To find this information, you will need the patient's first and last name, as well as the date of birth. If the user does not provide this, the user will need to be notified that they are missing info. Assume names and DOB are space separated unless otherwise indicated. Make sure you have all three fields, as all three are needed to search the database. DO NOT TRY TO GUESS ANY FIELD. Once you have the required information, search the database for the patient info. User may provide a reason for visit(rfv), but if they don't, you can still search the database."
         },
         {
             "role": "assistant",
@@ -41,7 +41,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
         response_stream = ""
         try:
-            response_stream = summary_model.chat(messages = st.session_state.messages, tools = tools, tool_choice=tool_choice)
+            response_stream = nlp_model.chat(messages = st.session_state.messages, tools = tools, tool_choice=tool_choice)
         except:
             st.error("Oops. An error has occurred. Please try again") 
         if response_stream != "":
@@ -58,7 +58,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                         function_result = names_to_functions[function_name](**function_params)
                         print(function_result)
                         print("tool call succeeded")
-                        st.write(function_result)
+                        st.text(function_result)
                         message = {"role": "assistant", "content":function_result}
                     else:
                         st.write(response_stream["choices"][0]["message"]["content"])
