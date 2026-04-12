@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import json
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai import Credentials
 from cloudant_service import search_patient
@@ -19,6 +20,15 @@ credentials = Credentials(
     url=URL,
     api_key=API_KEY
 )
+nlp_model = ModelInference(
+    model_id=MODEL_ID,
+    credentials=credentials,
+    project_id=PROJECT_ID,
+    params={
+        "temperature": 0.2,
+        "max_tokens": 200
+    }
+)
 
 summary_model = ModelInference(
     model_id=MODEL_ID,
@@ -26,7 +36,10 @@ summary_model = ModelInference(
     project_id=PROJECT_ID,
     params={
         "temperature": 0.2,
-        "max_tokens": 1000
+        "min_new_tokens": 0,
+        "max_tokens": 1000,
+        "stop_sequences": [],
+		"repetition_penalty": 1
     }
 )
 
@@ -38,25 +51,6 @@ If there is not sufficient past data to provide a detailed summary, summarize wh
 If including medications, include dates prescribed and the duration.
 Include dates for context when summarizing past visits.
 
-For Example, given the following basic history and past records:
-    Basic History:
-{example_history}
-    Past Records:
-{example_record}
-
-Your output should look like:
----
-General Summary: Marie Johnson, born January 15, 1989, has a history of abdominal discomfort and pain possibly relating to digestive issues. She has a history of IBS, and a family history of Crohn's. On the last recorded visit, she was advised to visit a gastroeneterologist. She does not smoke, or drink, and lives a sedentary lifestyle. In past visits, a balanced diet has been discussed with her.
-
-Medications: None prescribed at present
-
-Relevant Past visits:
-2024-12-11:
-Visited with concerns about persistent abdominal discomfort and associated symptoms: fatigue, mild nausea, and intermittent cramping. Also reported increased stress at work and difficulty sleeping. Physical exam revealed indications of dehydration and mild tenderness in the lower abdomen, but other abnormalities were not noted. Advised to work on stress management, water intake, and balanced diet
-
-2020-04-06:
-Visited with concerns of nausea and vomiting. Associated symptoms of dizziness, headaches, abdominal pain, and diarrhea were also noted. Physical examination showed mild pallor and mild tenderness around the umbilical area. Prescribed Ondansetron 4mh orally every 8 hours as needed for nausea. Recommended to stick to BRAT diet until recovered, and focus on hydration.
----
 Here is the information you need to summarize:
 Basic History:
 {basic_history}
@@ -88,12 +82,10 @@ def get_summary(basic_history, past_records, rfv = ""):
     print(prompt)
     try:
         response = summary_model.generate_text(params={
-            "decoding_method": "greedy",
-		    "max_new_tokens": 800,
-		    "min_new_tokens": 0,
-		    "stop_sequences": [],
-		    "repetition_penalty": 1
-        }, prompt=prompt)
+            "decoding_method": "greedy"
+        }, guardrails = False, prompt=prompt)
+        if response == '':
+            return f"Basic History: {json.dumps(basic_history, indent = 4)}\n Past Records: {json.dumps(past_records, indent = 4)}"
     except Exception as e:
         response = f'Error fetching response: {e}'
     print(response)
@@ -120,7 +112,6 @@ def get_patient_info_summary_contextless(first_name, last_name, date_of_birth):
     except Exception as e:
         print(f'Error fetching medical data: {e}')
         return ("There was a problem searching the database")
-
 def get_patient_info_summary_context(first_name, last_name, date_of_birth, rfv):
     """
     Searches the database for patient information and history, and returns a tuple: (patient info, patient history). Used when only giver name, DOB, and patient's reason for visit(rfv)

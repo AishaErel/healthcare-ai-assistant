@@ -6,7 +6,7 @@ st.title("Patient Search")
 with st.form("patient_search_form"):
     patient_first_name = st.text_input("Please type patient first name", placeholder="First name")
     patient_last_name = st.text_input("Please type patient last name", placeholder="Last name")
-    patient_dob = st.text_input("Please type patient date of birth", placeholder="YYYY-MM-DD")
+    patient_dob = st.text_input("Please type patient date of birth (YYYY-MM-DD)", placeholder="YYYY-MM-DD")
 
     submitted = st.form_submit_button("Retrieve Patient Information")
 

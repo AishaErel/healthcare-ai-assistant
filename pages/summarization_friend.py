@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 from langchain_ibm.chat_models import convert_to_openai_tool
-from summary_model import summary_model, missing_info, get_patient_info_summary_contextless, get_patient_info_summary_context
+from summary_model import nlp_model, missing_info, get_patient_info_summary_contextless, get_patient_info_summary_context
 
 names_to_functions = {
     "missing_info": missing_info,
@@ -41,7 +41,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
     with st.chat_message("assistant"):
         response_stream = ""
         try:
-            response_stream = summary_model.chat(messages = st.session_state.messages, tools = tools, tool_choice=tool_choice)
+            response_stream = nlp_model.chat(messages = st.session_state.messages, tools = tools, tool_choice=tool_choice)
         except:
             st.error("Oops. An error has occurred. Please try again") 
         if response_stream != "":
@@ -58,7 +58,7 @@ if st.session_state.messages[-1]["role"] != "assistant":
                         function_result = names_to_functions[function_name](**function_params)
                         print(function_result)
                         print("tool call succeeded")
-                        st.write(function_result)
+                        st.text(function_result)
                         message = {"role": "assistant", "content":function_result}
                     else:
                         st.write(response_stream["choices"][0]["message"]["content"])
