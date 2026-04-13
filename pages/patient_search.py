@@ -24,7 +24,7 @@ if submitted:
                 st.write("### Patient Info")
                 st.write(f"Name: {patient['first_name']} {patient['last_name']}")
                 st.write(f"DOB: {patient['date_of_birth']}")
-                st.write(f"Gender: {patient['gender']}")
+                st.write(f"Sex: {patient['sex']}")
                 st.write(f"Age: {patient['age']}")
             else:
                 st.warning("No matching patient found.")

@@ -8,7 +8,7 @@ def extract_patient_context(patient):
     return {
         "name": f"{patient.get('first_name', '')} {patient.get('last_name', '')}".strip() or "Not specified",
         "age": patient.get("age") or history.get("age") or "Not specified",
-        "gender": patient.get("gender") or history.get("gender") or "Not specified",
+        "sex": patient.get("sex") or history.get("sex") or "Not specified",
         "dob": patient.get("date_of_birth") or "Not specified",
         "history": history,
         "visits": visits[-3:] if visits else []
@@ -43,7 +43,7 @@ def build_patient_context_text(patient):
 Patient Demographics:
 - Name: {context['name']}
 - Age: {context['age']}
-- Gender: {context['gender']}
+- Sex: {context['sex']}
 - DOB: {context['dob']}
 
 Medical History:

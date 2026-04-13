@@ -13,7 +13,7 @@ if patient:
     st.write("### Patient Info")
     st.write(f"Name: {patient.get('first_name', '')} {patient.get('last_name', '')}")
     st.write(f"DOB: {patient.get('date_of_birth', '')}")
-    st.write(f"Gender: {patient.get('gender', '')}")
+    st.write(f"Sex: {patient.get('sex', '')}")
     st.write(f"Age: {patient.get('age', '')}")
 
     # Medical History

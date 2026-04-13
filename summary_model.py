@@ -4,6 +4,7 @@ import json
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai import Credentials
 from cloudant_service import search_patient
+from patient_context_for_model import build_patient_context_text
 
 load_dotenv()
 
@@ -43,7 +44,7 @@ summary_model = ModelInference(
     }
 )
 
-def summarization_prompt_contextless(basic_history, past_records):
+def summarization_prompt_contextless(patient_context):
     return f"""You are a healthcare assistant. Your role is aiding medical professionals by providing concise, easy to read, and detailed summaries of a patient's basic medical history and past visit records, focusing on most relevant history that would be useful to an upcoming visit. Not all records provided may be relevant.
 Only refer to the information obtained from the retrieved records.
 If there is no past visit history, report that there is no past history.
@@ -52,10 +53,7 @@ If including medications, include dates prescribed and the duration.
 Include dates for context when summarizing past visits.
 
 Here is the information you need to summarize:
-Basic History:
-{basic_history}
-Past Records:
-{past_records}
+{patient_context}
 
     """.strip()
     
@@ -74,18 +72,18 @@ def summarization_prompt_context(basic_history, past_records, rfv):
     {past_records}
     """.strip()
 
-def get_summary(basic_history, past_records, rfv = ""):
+def get_summary(patient_context, rfv = ""):
     if not rfv:
-        prompt = summarization_prompt_contextless(basic_history, past_records)
+        prompt = summarization_prompt_contextless(patient_context)
     else:
-        prompt = summarization_prompt_context(basic_history, past_records, rfv)
+        prompt = summarization_prompt_context(patient_context, rfv)
     print(prompt)
     try:
         response = summary_model.generate_text(params={
             "decoding_method": "greedy"
         }, guardrails = False, prompt=prompt)
         if response == '':
-            return f"Basic History: {json.dumps(basic_history, indent = 4)}\n Past Records: {json.dumps(past_records, indent = 4)}"
+            return f"Patient Info: {json.dumps(patient_context, indent = 4)}"
     except Exception as e:
         response = f'Error fetching response: {e}'
     print(response)
@@ -105,10 +103,9 @@ def get_patient_info_summary_contextless(first_name, last_name, date_of_birth):
     """
     try:
         patient_info = search_patient(first_name, last_name, date_of_birth)[0]
-        basic_medical_info = (first_name, last_name, date_of_birth, patient_info.get('gender'), patient_info.get('age'), patient_info.get('basic_medical_history', []))
-        past_visit_history = patient_info.get('previous_visits', [])
+        patient_context = build_patient_context_text(patient_info)
         print("Got all needed info")
-        return get_summary(basic_medical_info, past_visit_history);
+        return get_summary(patient_context);
     except Exception as e:
         print(f'Error fetching medical data: {e}')
         return ("There was a problem searching the database")
@@ -127,7 +124,7 @@ def get_patient_info_summary_context(first_name, last_name, date_of_birth, rfv):
     """
     try:
         patient_info = search_patient(first_name, last_name, date_of_birth)[0]
-        basic_medical_info = ('First Name: ' + first_name, 'Last Name: ' + last_name, 'DOB: ' + date_of_birth, 'sex = ' + patient_info.get('gender'), 'age = ' + patient_info.get('age'), patient_info.get('basic_medical_history', []))
+        basic_medical_info = ('First Name: ' + first_name, 'Last Name: ' + last_name, 'DOB: ' + date_of_birth, 'sex = ' + patient_info.get('sex'), 'age = ' + patient_info.get('age'), patient_info.get('basic_medical_history', []))
         past_visit_history = patient_info.get('previous_visits', [])
         print("Got all needed info")
         return get_summary(basic_medical_info, past_visit_history, rfv);

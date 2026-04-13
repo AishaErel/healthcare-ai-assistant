@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -9,7 +10,7 @@ CLOUDANT_APIKEY = os.getenv("CLOUDANT_APIKEY")
 CLOUDANT_APIKEY_READER = os.getenv("CLOUDANT_APIKEY_READER")
 CLOUDANT_DB = os.getenv("CLOUDANT_DB")
 
-def get_iam_token(reader = 1):
+def get_iam_token(reader = True):
     token_url = "https://iam.cloud.ibm.com/identity/token"
     headers = {
         "Content-Type": "application/x-www-form-urlencoded"
@@ -61,3 +62,30 @@ def search_patient(first_name, last_name, date_of_birth):
     response = requests.post(url, json=query, headers=headers)
     response.raise_for_status()
     return response.json().get("docs", [])
+
+def get_visitID(visits):
+    id = str(len(visits) + 1)
+    id_string = "visit_" + ('0'*(3-len(id))) + id
+    return id_string
+
+def add_patient_record(first_name, last_name, date_of_birth, soap_note):
+    token = get_iam_token(reader = False)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    info = search_patient(first_name,last_name,date_of_birth)[0]
+    prev_visit = info.get('previous_visits', [])
+    prev_visit.append({
+        'visit_id': get_visitID(prev_visit),
+        'date': datetime.today().strftime('%Y-%m-%d'),
+        'content': soap_note
+    })
+    info.update(previous_visits= prev_visit)
+    url = f"{CLOUDANT_URL}/{CLOUDANT_DB}/{info.get('_id')}"
+    try:
+        response = requests.put(url, json=info, headers = headers)
+        #return f"New Documentation has been uploaded to the patient record for {first_name}, {last_name} born: {date_of_birth}"
+        return response
+    except Exception as e:
+        return f"Failed to update database: {e}"
