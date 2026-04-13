@@ -4,6 +4,16 @@ from cloudant_service import add_patient_record
 patient = st.session_state.get("selected_patient")
 st.title(f"Upload New Visit Record for {patient.get('first_name', '')} {patient.get('last_name', '')}")
 
+st.sidebar.page_link('streamlit_app.py', label='Home')
+st.sidebar.page_link('pages/patient_search.py', label='Patient Search')
+st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+if patient:
+    st.sidebar.page_link('pages/soap_generator.py', label='SOAP-bot')
+    st.sidebar.page_link('pages/new_patient.py', label='New Patient')
+    st.sidebar.page_link('pages/patient_record.py', label='Patient Record')
+    st.sidebar.page_link('pages/update_patient_info.py', label='Update Patient Info')
+
+
 with st.form("patient_manual_soap_form"):
     soap_note = st.text_input("Please provide soap note", placeholder = '')
 

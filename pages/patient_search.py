@@ -3,6 +3,23 @@ from cloudant_service import search_patient
 
 st.title("Patient Search")
 
+st.sidebar.page_link('streamlit_app.py', label='Home')
+st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+if 'selected_patient' in st.session_state:
+    st.sidebar.page_link('pages/soap_generator.py', label='SOAP-bot')
+    st.sidebar.page_link('pages/manual_soap.py', label='SOAP upload')
+    st.sidebar.page_link('pages/new_patient.py', label='New Patient')
+    st.sidebar.page_link('pages/patient_record.py', label='Patient Record')
+    st.sidebar.page_link('pages/update_patient_info.py', label='Update Patient Info')
+
+if st.button("Sample Patients"):
+    st.markdown("""
+    ### Test Patients:
+    Michael Chen 1989-12-16  
+    Alice Raymond 1999-03-16  
+    Marie Johnson 1989-01-15             
+""")
+
 with st.form("patient_search_form"):
     patient_first_name = st.text_input("Please type patient first name", placeholder="First name")
     patient_last_name = st.text_input("Please type patient last name", placeholder="Last name")

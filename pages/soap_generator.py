@@ -8,6 +8,16 @@ st.set_page_config(
 )
 
 st.title("Healthcare AI Assistant")
+
+st.sidebar.page_link('streamlit_app.py', label='Home')
+st.sidebar.page_link('pages/patient_search.py', label='Patient Search')
+st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+if 'selected_patient' in st.session_state:
+    st.sidebar.page_link('pages/manual_soap.py', label='SOAP upload')
+    st.sidebar.page_link('pages/new_patient.py', label='New Patient')
+    st.sidebar.page_link('pages/patient_record.py', label='Patient Record')
+    st.sidebar.page_link('pages/update_patient_info.py', label='Update Patient Info')
+
 st.write("Convert messy doctor notes into SOAP-format medical records.")
 
 patient = st.session_state.get("selected_patient")

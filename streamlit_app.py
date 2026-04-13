@@ -1,23 +1,30 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Healthcare AI Assistant",
+    page_title="Welcome to Careflow AI Health Record Assistant",
     page_icon="🩺",
     layout="wide"
 )
 
-st.title("Healthcare AI Assistant")
-st.write("Use the sidebar to navigate through the app.")
+st.title("Welcome to Careflow AI Health Record Assistant")
 
-st.markdown("""
-### App Flow
-1. Patient Search  
-2. Patient Record  
-3. SOAP Generator
-""")
-st.markdown("""
-    ### Test Patients:
-    Michael Chen 1989-12-16  
-    Alice Raymond 1999-03-16  
-    Marie Johnson 1989-01-15             
-""")
+st.sidebar.page_link('pages/patient_search.py', label='Patient Search')
+st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+if 'selected_patient' in st.session_state:
+    st.sidebar.page_link('pages/soap_generator.py', label='SOAP-bot')
+
+
+st.markdown("## How Can I help you today?")
+
+# Navigation buttons
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button("Retrieve Patient Records"):
+        st.session_state['reason'] = 'R'
+        st.switch_page("pages/patient_search.py")
+   
+with col2:
+    if st.button("Generate SOAP Note"):
+        st.session_state['reason'] = 'S'
+        st.switch_page("pages/patient_search.py")
