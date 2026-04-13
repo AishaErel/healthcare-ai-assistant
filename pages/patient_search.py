@@ -36,4 +36,4 @@ if submitted:
         st.warning("Please type patient information first.")
 
 if st.button("Add a New Patient"):
-    st.info("Navigate to Add Patient page.") #will be dealt with later
+    st.switch_page("pages/new_patient.py") #will be dealt with later
