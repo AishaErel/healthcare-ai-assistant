@@ -1,5 +1,4 @@
 import streamlit as st
-from datetime import datetime
 from cloudant_service import add_patient
 
 st.title("Add Patient")
@@ -19,8 +18,8 @@ with st.form("patient_add_form"):
     else:
         patient_soap = st.text_input("Please enter visit documentation (optional)", value = "")
     submitted = st.form_submit_button("Upload Patient Info")
+    
 if submitted:
-
     patient_history = {"conditions": patient_conditions.split(",") if patient_conditions else [], "medications": patient_medications.split(",") if patient_medications else [], "allergies": patient_allergies.split(",") if patient_allergies else [], "notes":patient_notes}
     try:
         response = add_patient(patient_first_name, patient_last_name, patient_dob, patient_sex, patient_history, patient_age, patient_soap)
