@@ -11,6 +11,7 @@ with st.form("patient_search_form"):
     submitted = st.form_submit_button("Retrieve Patient Information")
 
 if submitted:
+    print(patient_first_name+patient_last_name+patient_dob)
     if patient_first_name and patient_last_name and patient_dob:
         try:
             results = search_patient(patient_first_name, patient_last_name, patient_dob)

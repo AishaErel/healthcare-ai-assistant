@@ -21,6 +21,7 @@ def get_iam_token(reader = True):
             "apikey": CLOUDANT_APIKEY_READER
         }
     else:
+        print("Write Token")
         data = {
             "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
             "apikey": CLOUDANT_APIKEY
@@ -86,6 +87,33 @@ def add_patient_record(first_name, last_name, date_of_birth, soap_note):
     try:
         response = requests.put(url, json=info, headers = headers)
         #return f"New Documentation has been uploaded to the patient record for {first_name}, {last_name} born: {date_of_birth}"
+        return response
+    except Exception as e:
+        return f"Failed to update database: {e}"
+
+def add_patient(first_name, last_name, date_of_birth, sex, history, age ='', visit_notes = ''):
+    token = get_iam_token(reader = False)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    new_patient = {
+        "role": "patient",
+        "first_name": first_name,
+        "last_name": last_name,
+        "date_of_birth": date_of_birth,
+        "sex": sex,
+        "age": age,
+        "basic_medical_history": history,
+        "previous_visits": []
+    }
+    if visit_notes:
+        new_patient["previous_visits"].append({"visit_id" :"visit_001", "date": datetime.today().strftime('%Y-%m-%d'), "soap_note": visit_notes})
+
+    print(new_patient)
+    url = f"{CLOUDANT_URL}/{CLOUDANT_DB}"
+    try:
+        response = requests.post(url, json=new_patient, headers=headers)
         return response
     except Exception as e:
         return f"Failed to update database: {e}"
