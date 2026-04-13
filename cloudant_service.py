@@ -68,23 +68,22 @@ def get_visitID(visits):
     id_string = "visit_" + ('0'*(3-len(id))) + id
     return id_string
 
-def add_patient_record(first_name, last_name, date_of_birth, soap_note):
+def add_patient_record(patient, soap_note):
     token = get_iam_token(reader = False)
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    info = search_patient(first_name,last_name,date_of_birth)[0]
-    prev_visit = info.get('previous_visits', [])
+    prev_visit = patient.get('previous_visits', [])
     prev_visit.append({
         'visit_id': get_visitID(prev_visit),
         'date': datetime.today().strftime('%Y-%m-%d'),
         'content': soap_note
     })
-    info.update(previous_visits= prev_visit)
-    url = f"{CLOUDANT_URL}/{CLOUDANT_DB}/{info.get('_id')}"
+    patient.update(previous_visits= prev_visit)
+    url = f"{CLOUDANT_URL}/{CLOUDANT_DB}/{patient.get('_id')}"
     try:
-        response = requests.put(url, json=info, headers = headers)
+        response = requests.put(url, json=patient, headers = headers)
         return response
     except Exception as e:
         return f"Failed to update database: {e}"
@@ -95,6 +94,7 @@ def update_patient_info(patient, history):
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
+    print(history)
     patient.update(basic_medical_history = history)
     url = f"{CLOUDANT_URL}/{CLOUDANT_DB}/{patient.get('_id')}"
     try:
