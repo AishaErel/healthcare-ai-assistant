@@ -21,10 +21,10 @@ col1, col2 = st.columns(2)
 
 with col1:
     if st.button("Retrieve Patient Records"):
-        st.session_state['reason'] = 'R'
+        st.session_state['Action'] = 'R'
         st.switch_page("pages/patient_search.py")
    
 with col2:
     if st.button("Generate SOAP Note"):
-        st.session_state['reason'] = 'S'
+        st.session_state['Action'] = 'S'
         st.switch_page("pages/patient_search.py")

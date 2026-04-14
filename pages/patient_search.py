@@ -4,7 +4,7 @@ from cloudant_service import search_patient
 st.title("Patient Search")
 
 st.sidebar.page_link('streamlit_app.py', label='Home')
-st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+#st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
 if 'selected_patient' in st.session_state:
     st.sidebar.page_link('pages/soap_generator.py', label='SOAP-bot')
     st.sidebar.page_link('pages/manual_soap.py', label='SOAP upload')
@@ -36,7 +36,11 @@ if submitted:
                 st.success("Patient found.")
                 patient = results[0]
                 st.session_state["selected_patient"] = patient
-                st.switch_page("pages/patient_record.py")
+
+                if 'Action' in st.session_state and st.session_state['Action']=='S':
+                    st.switch_page("pages/soap_generator.py")
+                else:
+                    st.switch_page("pages/patient_record.py")
 
                 st.write("### Patient Info")
                 st.write(f"Name: {patient['first_name']} {patient['last_name']}")

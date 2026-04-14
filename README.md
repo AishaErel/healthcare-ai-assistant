@@ -35,7 +35,14 @@ A chatbot interface has been implemented for the Summarization Agent. The Agent 
 ### (Week 7):
 The Summarization Agent Chatbot interface now has tools linked, so it can take user input about patient information, fetch from the database, and provide a summary of the medical records retrieved. The Documentation Agent now has the capability to fetch medical history for a patient so that it has added context for the SOAP note generation.
 
+### (Week 8):
+- Database write implementation -- The Documentation agent needs to be able to add new patient visit records after human approval. There is also now an option to add a patient if one doesn't exist yet
+- U/I improvements--Implemented front page, added some changes to link pages. Altered sidebar to only display pages that are valid (some pages don't have content unless a patient is loaded into the session_state)
+  
 ## What Is Left:
-- U/I improvements--Implement front page
 - Prompt Fine Tuning -- Both the summarization agent and the documentation agent have some issues with inconsistent output, though this is more egregious with the summarization agent. We will try further fine tuning and switching from zero-shot to one-shot or few-shot prompting in the coming week to resolve this.
-- Database write implementation -- The Documentation agent needs to be able to add new patient visit records after human approval. It will also need to create a patient file if the patient file does not yet exist
+- Documentation Agent -- Try again loop
+### If time permits:
+-U/I improvements--just returning status code directly when operation to database is done. Need to make this more user readable
+- Summarization Agent started experiencing significant issues. If time permits, convert chatbot interface as potential alternative to patient search form
+

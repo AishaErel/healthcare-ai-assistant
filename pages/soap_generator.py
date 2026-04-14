@@ -12,7 +12,7 @@ st.title("Healthcare AI Assistant")
 
 st.sidebar.page_link('streamlit_app.py', label='Home')
 st.sidebar.page_link('pages/patient_search.py', label='Patient Search')
-st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+#st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
 if 'selected_patient' in st.session_state:
     st.sidebar.page_link('pages/manual_soap.py', label='SOAP upload')
     st.sidebar.page_link('pages/new_patient.py', label='New Patient')
@@ -101,5 +101,13 @@ with col2:
         st.switch_page('pages/manual_soap.py')
 
 with col3:
-    if st.button("Retry"):
-        st.write("Not yet implemented. Should we provide a reason to retry?")
+    with st.popover("Retry"):
+        if 'Stash_SOAP' in st.session_state:
+            reason = st.text_area("What needs to be different?")
+            if st.button ("Retry"):
+                if reason:
+                    st.session_state['Reason'] = reason
+                else:
+                    st.warning("Use Generate SOAP Record button if you want to retry without input.")
+        else:
+            st.write("Try generating a SOAP note first.")

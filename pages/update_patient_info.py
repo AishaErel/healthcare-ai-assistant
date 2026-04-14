@@ -6,7 +6,7 @@ st.title(f"Updating Info for {patient.get('first_name', '')} {patient.get('last_
  
 st.sidebar.page_link('streamlit_app.py', label='Home')
 st.sidebar.page_link('pages/patient_search.py', label='Patient Search')
-st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+#st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
 if 'selected_patient' in st.session_state:
     st.sidebar.page_link('pages/soap_generator.py', label='SOAP-bot')
     st.sidebar.page_link('pages/manual_soap.py', label='SOAP upload')
