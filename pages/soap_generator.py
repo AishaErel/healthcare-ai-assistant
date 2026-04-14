@@ -1,6 +1,7 @@
 import streamlit as st
 from watsonx_service import generate_soap
 from patient_context_for_model import build_patient_context_text
+from cloudant_service import add_patient_record, search_patient
 
 st.set_page_config(
     page_title="Care.AI SOAP Generator",
@@ -8,6 +9,16 @@ st.set_page_config(
 )
 
 st.title("Healthcare AI Assistant")
+
+st.sidebar.page_link('streamlit_app.py', label='Home')
+st.sidebar.page_link('pages/patient_search.py', label='Patient Search')
+#st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+if 'selected_patient' in st.session_state:
+    st.sidebar.page_link('pages/manual_soap.py', label='SOAP upload')
+    st.sidebar.page_link('pages/new_patient.py', label='New Patient')
+    st.sidebar.page_link('pages/patient_record.py', label='Patient Record')
+    st.sidebar.page_link('pages/update_patient_info.py', label='Update Patient Info')
+
 st.write("Convert messy doctor notes into SOAP-format medical records.")
 
 patient = st.session_state.get("selected_patient")
@@ -62,11 +73,43 @@ if st.button("Generate SOAP Record"):
                    
                 )
                 st.subheader("Generated SOAP Note")
-                st.text_area("SOAP Output", value=result, height=300)
+                st.text_area("SOAP Output", value=result, height="content")
+                st.session_state['Stash_SOAP'] = result
 
             except Exception as e:
                 st.error(f"Error: {e}")
-        
-       #add a button here when clicked we add the newly generared soap to patient records
     else:
         st.warning("Please enter doctor notes first.")
+
+st.divider()
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("Accept"):
+        if 'Stash_SOAP' in st.session_state:
+            try:
+                results = add_patient_record(patient, st.session_state['Stash_SOAP'])
+                if results.status_code in (200, 201, 204):
+                    st.write("SOAP record added successfully.")
+                    #Reload patient data
+                    st.session_state['selected_patient'] = search_patient(patient['first_name'], patient['last_name'], patient['date_of_birth'])[0]
+                else:
+                    st.write(f"Failed to update database: Status code {results.status_code}")
+            except Exception as e:
+                st.error(f"Search error: {e}")
+        else:
+            st.warning("A SOAP note needs to be generated first.")
+with col2:
+    if st.button("Manually Edit"):
+        st.switch_page('pages/manual_soap.py')
+
+with col3:
+    with st.popover("Retry"):
+        if 'Stash_SOAP' in st.session_state:
+            reason = st.text_area("What needs to be different?")
+            if st.button ("Retry"):
+                if reason:
+                    st.session_state['Reason'] = reason
+                else:
+                    st.warning("Use Generate SOAP Record button if you want to retry without input.")
+        else:
+            st.write("Try generating a SOAP note first.")

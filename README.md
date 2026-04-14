@@ -37,7 +37,11 @@ The Summarization Agent Chatbot interface now has tools linked, so it can take u
 
 ### (Week 8):
 - Database write implementation -- The Documentation agent needs to be able to add new patient visit records after human approval. There is also now an option to add a patient if one doesn't exist yet
+- U/I improvements--Implemented front page, added some changes to link pages. Altered sidebar to only display pages that are valid (some pages don't have content unless a patient is loaded into the session_state)
   
 ## What Is Left:
-- U/I improvements--Implement front page
 - Prompt Fine Tuning -- Both the summarization agent and the documentation agent have some issues with inconsistent output, though this is more egregious with the summarization agent. We will try further fine tuning and switching from zero-shot to one-shot or few-shot prompting in the coming week to resolve this.
+- Documentation Agent -- Try again loop
+### If time permits:
+- Summarization Agent started experiencing significant issues. If time permits, convert chatbot interface as potential alternative to patient search form
+

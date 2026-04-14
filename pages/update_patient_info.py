@@ -1,11 +1,20 @@
 import streamlit as st
-from cloudant_service import update_patient_info
+from cloudant_service import update_patient_info, search_patient
 
 patient = st.session_state.get("selected_patient")
 st.title(f"Updating Info for {patient.get('first_name', '')} {patient.get('last_name', '')}")
  
+st.sidebar.page_link('streamlit_app.py', label='Home')
+st.sidebar.page_link('pages/patient_search.py', label='Patient Search')
+#st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+if 'selected_patient' in st.session_state:
+    st.sidebar.page_link('pages/soap_generator.py', label='SOAP-bot')
+    st.sidebar.page_link('pages/manual_soap.py', label='SOAP upload')
+    st.sidebar.page_link('pages/new_patient.py', label='New Patient')
+    st.sidebar.page_link('pages/patient_record.py', label='Patient Record')
+
+
 def reformat(patient_info, key_info):
-    print(patient_info)
     if (patient_info):
         if(patient_info == '0'):
             return patient['basic_medical_history'].get(key_info,'')
@@ -36,9 +45,11 @@ if submitted:
     
     try:
         response = update_patient_info(patient, patient_history)
-        if response in (200, 201, 204):
-            st.write("Patient Record updated successfully.")
+        if response.status_code in (200, 201, 204):
+            st.write("SOAP record added successfully.")
+            #Reload patient data
+            st.session_state['selected_patient'] = search_patient(patient['first_name'], patient['last_name'], patient['date_of_birth'])[0]
         else:
-            st.write(response)
+            st.write(f"Failed to update database: Status code {response.status_code}")
     except Exception as e:
         st.error(f"Failed to Update Database: {e}")
