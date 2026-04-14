@@ -15,7 +15,6 @@ if 'selected_patient' in st.session_state:
 
 
 def reformat(patient_info, key_info):
-    print(patient_info)
     if (patient_info):
         if(patient_info == '0'):
             return patient['basic_medical_history'].get(key_info,'')

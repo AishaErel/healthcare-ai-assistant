@@ -123,7 +123,6 @@ def add_patient(first_name, last_name, date_of_birth, sex, history, age ='', vis
     if visit_notes:
         new_patient["previous_visits"].append({"visit_id" :"visit_001", "date": datetime.today().strftime('%Y-%m-%d'), "soap_note": visit_notes})
 
-    print(new_patient)
     url = f"{CLOUDANT_URL}/{CLOUDANT_DB}"
     try:
         response = requests.post(url, json=new_patient, headers=headers)

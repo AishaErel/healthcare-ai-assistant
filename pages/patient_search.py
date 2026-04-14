@@ -12,10 +12,10 @@ if 'selected_patient' in st.session_state:
     st.sidebar.page_link('pages/patient_record.py', label='Patient Record')
     st.sidebar.page_link('pages/update_patient_info.py', label='Update Patient Info')
 
-if st.button("Sample Patients"):
+with st.expander("Sample Patients"):
     st.markdown("""
     ### Test Patients:
-    Michael Chen 1989-12-16  
+    Michael Chen 1975-12-16  
     Alice Raymond 1999-03-16  
     Marie Johnson 1989-01-15             
 """)
@@ -28,7 +28,6 @@ with st.form("patient_search_form"):
     submitted = st.form_submit_button("Retrieve Patient Information")
 
 if submitted:
-    print(patient_first_name+patient_last_name+patient_dob)
     if patient_first_name and patient_last_name and patient_dob:
         try:
             results = search_patient(patient_first_name, patient_last_name, patient_dob)
@@ -53,4 +52,4 @@ if submitted:
         st.warning("Please type patient information first.")
 
 if st.button("Add a New Patient"):
-    st.switch_page("pages/new_patient.py") #will be dealt with later
+    st.switch_page("pages/new_patient.py")

@@ -14,9 +14,11 @@ if patient:
     st.sidebar.page_link('pages/update_patient_info.py', label='Update Patient Info')
 
 
-with st.form("patient_manual_soap_form"):
-    soap_note = st.text_input("Please provide soap note", placeholder = '')
-
+with st.form("patient_manual_soap_form", height = "content"):
+    if 'Stash_SOAP' in st.session_state:
+        soap_note = st.text_area("Please enter visit documentation", value = st.session_state['Stash_SOAP'], height = "content")
+    else:
+        soap_note = st.text_area("Please enter visit documentation", value = "", height = "content")
     submitted = st.form_submit_button("Upload SOAP note")
 
 if submitted:

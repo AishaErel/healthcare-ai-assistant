@@ -1,6 +1,7 @@
 import streamlit as st
 from watsonx_service import generate_soap
 from patient_context_for_model import build_patient_context_text
+from cloudant_service import add_patient_record
 
 st.set_page_config(
     page_title="Care.AI SOAP Generator",
@@ -72,11 +73,33 @@ if st.button("Generate SOAP Record"):
                    
                 )
                 st.subheader("Generated SOAP Note")
-                st.text_area("SOAP Output", value=result, height=300)
+                st.text_area("SOAP Output", value=result, height="content")
+                st.session_state['Stash_SOAP'] = result
 
             except Exception as e:
                 st.error(f"Error: {e}")
-        
-       #add a button here when clicked we add the newly generared soap to patient records
     else:
         st.warning("Please enter doctor notes first.")
+
+st.divider()
+col1, col2, col3 = st.columns(3)
+with col1:
+    if st.button("Accept"):
+        if 'Stash_SOAP' in st.session_state:
+            try:
+                results = add_patient_record(patient, st.session_state['Stash_SOAP'])
+                if results in (200, 201, 204):
+                    st.write("SOAP record added successfully.")
+                else:
+                    st.write(results)
+            except Exception as e:
+                st.error(f"Search error: {e}")
+        else:
+            st.warning("A SOAP note needs to be generated first.")
+with col2:
+    if st.button("Manually Edit"):
+        st.switch_page('pages/manual_soap.py')
+
+with col3:
+    if st.button("Retry"):
+        st.write("Not yet implemented. Should we provide a reason to retry?")
