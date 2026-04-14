@@ -2,6 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
+from soap_converter import soap_note_to_json_string
 
 load_dotenv()
 
@@ -78,7 +79,7 @@ def add_patient_record(patient, soap_note):
     prev_visit.append({
         'visit_id': get_visitID(prev_visit),
         'date': datetime.today().strftime('%Y-%m-%d'),
-        'content': soap_note
+        'content': soap_note_to_json_string(soap_note)
     })
     patient.update(previous_visits= prev_visit)
     url = f"{CLOUDANT_URL}/{CLOUDANT_DB}/{patient.get('_id')}"
@@ -94,7 +95,6 @@ def update_patient_info(patient, history):
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    print(history)
     patient.update(basic_medical_history = history)
     url = f"{CLOUDANT_URL}/{CLOUDANT_DB}/{patient.get('_id')}"
     try:
@@ -104,7 +104,7 @@ def update_patient_info(patient, history):
         return f"Failed to update database: {e}"
 
 
-def add_patient(first_name, last_name, date_of_birth, sex, history, age ='', visit_notes = ''):
+def add_patient(first_name, last_name, date_of_birth, sex, history, age =''):
     token = get_iam_token(reader = False)
     headers = {
         "Authorization": f"Bearer {token}",
@@ -120,9 +120,6 @@ def add_patient(first_name, last_name, date_of_birth, sex, history, age ='', vis
         "basic_medical_history": history,
         "previous_visits": []
     }
-    if visit_notes:
-        new_patient["previous_visits"].append({"visit_id" :"visit_001", "date": datetime.today().strftime('%Y-%m-%d'), "soap_note": visit_notes})
-
     url = f"{CLOUDANT_URL}/{CLOUDANT_DB}"
     try:
         response = requests.post(url, json=new_patient, headers=headers)
