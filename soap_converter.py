@@ -1,7 +1,6 @@
 #Code Obtained from claude.ai with the prompt: "Can you help me write a python function that takes a string version of a SOAP note and converts it to json? There's a risk there might be special characters I need to strip, namely asterisks."
 
 import re
-import json
 
 def soap_note_to_json(soap_text: str, strip_chars: str = "*") -> dict:
     """
@@ -40,8 +39,3 @@ def soap_note_to_json(soap_text: str, strip_chars: str = "*") -> dict:
             result[section] = content if content else None
 
     return result
-
-
-def soap_note_to_json_string(soap_text: str, strip_chars: str = "*") -> str:
-    """Returns the result as a formatted JSON string."""
-    return json.dumps(soap_note_to_json(soap_text, strip_chars), indent=2)
