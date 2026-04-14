@@ -27,7 +27,7 @@ if submitted:
         if results.status_code in (200, 201, 204):
             st.write("SOAP record added successfully.")
             #Reload patient data
-            st.session_state['selected_patient'] = search_patient(patient['first_name'], patient['last_name'], patient['date_of_birth'])
+            st.session_state['selected_patient'] = search_patient(patient['first_name'], patient['last_name'], patient['date_of_birth'])[0]
         else:
             st.write(f"Failed to update database: Status code {results.status_code}")
     except Exception as e:

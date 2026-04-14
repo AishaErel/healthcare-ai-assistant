@@ -35,8 +35,8 @@ if submitted:
         if response.status_code in (200, 201, 204):
             st.write("SOAP record added successfully.")
             #Reload patient data
-            st.session_state['selected_patient'] = search_patient(patient_first_name, patient_last_name, patient_dob)
-            st.switch_page("pages/patient_record")
+            st.session_state['selected_patient'] = search_patient(patient_first_name, patient_last_name, patient_dob)[0]
+            st.switch_page("pages/patient_record.py")
         elif response.status_code == 409:
             st.write("Document may already exist. If not, you need to reload")
         else:
