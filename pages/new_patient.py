@@ -1,5 +1,5 @@
 import streamlit as st
-from cloudant_service import add_patient
+from cloudant_service import add_patient, search_patient
 
 st.title("Add Patient")
 
@@ -32,6 +32,14 @@ if submitted:
     patient_history = {"conditions": patient_conditions.split(",") if patient_conditions else [], "medications": patient_medications.split(",") if patient_medications else [], "allergies": patient_allergies.split(",") if patient_allergies else [], "notes":patient_notes}
     try:
         response = add_patient(patient_first_name, patient_last_name, patient_dob, patient_sex, patient_history, patient_age, patient_soap)
-        st.write(response)
+        if response.status_code in (200, 201, 204):
+            st.write("SOAP record added successfully.")
+            #Reload patient data
+            st.session_state['selected_patient'] = search_patient(patient_first_name, patient_last_name, patient_dob)
+            st.switch_page("pages/patient_record")
+        elif response.status_code == 409:
+            st.write("Document may already exist. If not, you need to reload")
+        else:
+            st.write(f"Failed to update database: Status code {response.status_code}")
     except Exception as e:
         st.error(f"Failed to Update Database: {e}")

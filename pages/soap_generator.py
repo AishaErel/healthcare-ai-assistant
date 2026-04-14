@@ -1,7 +1,7 @@
 import streamlit as st
 from watsonx_service import generate_soap
 from patient_context_for_model import build_patient_context_text
-from cloudant_service import add_patient_record
+from cloudant_service import add_patient_record, search_patient
 
 st.set_page_config(
     page_title="Care.AI SOAP Generator",
@@ -88,10 +88,12 @@ with col1:
         if 'Stash_SOAP' in st.session_state:
             try:
                 results = add_patient_record(patient, st.session_state['Stash_SOAP'])
-                if results in (200, 201, 204):
+                if results.status_code in (200, 201, 204):
                     st.write("SOAP record added successfully.")
+                    #Reload patient data
+                    st.session_state['selected_patient'] = search_patient(patient['first_name'], patient['last_name'], patient['date_of_birth'])
                 else:
-                    st.write(results)
+                    st.write(f"Failed to update database: Status code {results.status_code}")
             except Exception as e:
                 st.error(f"Search error: {e}")
         else:

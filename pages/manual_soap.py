@@ -1,5 +1,5 @@
 import streamlit as st
-from cloudant_service import add_patient_record
+from cloudant_service import add_patient_record, search_patient
 
 patient = st.session_state.get("selected_patient")
 st.title(f"Upload New Visit Record for {patient.get('first_name', '')} {patient.get('last_name', '')}")
@@ -24,9 +24,11 @@ with st.form("patient_manual_soap_form", height = "content"):
 if submitted:
     try:
         results = add_patient_record(patient, soap_note)
-        if results in (200, 201, 204):
+        if results.status_code in (200, 201, 204):
             st.write("SOAP record added successfully.")
+            #Reload patient data
+            st.session_state['selected_patient'] = search_patient(patient['first_name'], patient['last_name'], patient['date_of_birth'])
         else:
-            st.write(results)
+            st.write(f"Failed to update database: Status code {results.status_code}")
     except Exception as e:
         st.error(f"Search error: {e}")

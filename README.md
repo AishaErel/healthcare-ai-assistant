@@ -43,6 +43,5 @@ The Summarization Agent Chatbot interface now has tools linked, so it can take u
 - Prompt Fine Tuning -- Both the summarization agent and the documentation agent have some issues with inconsistent output, though this is more egregious with the summarization agent. We will try further fine tuning and switching from zero-shot to one-shot or few-shot prompting in the coming week to resolve this.
 - Documentation Agent -- Try again loop
 ### If time permits:
--U/I improvements--just returning status code directly when operation to database is done. Need to make this more user readable
 - Summarization Agent started experiencing significant issues. If time permits, convert chatbot interface as potential alternative to patient search form
 
