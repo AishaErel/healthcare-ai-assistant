@@ -30,7 +30,10 @@ if patient: #demographic info
     history = patient.get("basic_medical_history", {})
 
     if history: #allergies, etc
-        st.json(history)
+        st.markdown("**Conditions:**", history.get("conditions", ""))
+        st.write("**Medications:**", history.get("medications", ""))
+        st.write("**Allergies:**", history.get("allergies", ""))
+        st.write("**Notes:**", history.get("notes", ""))
     else:
         st.info("No medical history available.")
 

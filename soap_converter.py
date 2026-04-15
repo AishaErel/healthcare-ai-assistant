@@ -37,5 +37,11 @@ def soap_note_to_json(soap_text: str, strip_chars: str = "*") -> dict:
         content = match.group(2).strip()
         if section in result:
             result[section] = content if content else None
-
-    return result
+    
+    missing_keys = [key for key, value in result.items() if value is None]
+    if len(missing_keys) == 0:
+        print("no missing keys")
+        return result
+    else:
+        print(len(missing_keys))
+        return f"The following sections were not detected: {missing_keys}. Please make sure they are clearly indicated."

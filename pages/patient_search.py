@@ -17,7 +17,9 @@ with st.expander("Sample Patients"):
     ### Test Patients:
     Michael Chen 1975-12-16  
     Alice Raymond 1999-03-16  
-    Marie Johnson 1989-01-15             
+    Marie Johnson 1989-01-15     
+    Barbara Gordon 1980-02-17  
+    Stephanie Brown 1992-04-11        
 """)
 
 with st.form("patient_search_form"):

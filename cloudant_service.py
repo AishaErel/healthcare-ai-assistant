@@ -2,7 +2,6 @@ import os
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
-from soap_converter import soap_note_to_json
 
 load_dotenv()
 
@@ -79,7 +78,7 @@ def add_patient_record(patient, soap_note):
     prev_visit.append({
         'visit_id': get_visitID(prev_visit),
         'date': datetime.today().strftime('%Y-%m-%d'),
-        'soap_note': soap_note_to_json(soap_note)
+        'soap_note': soap_note
     })
     patient.update(previous_visits= prev_visit)
     url = f"{CLOUDANT_URL}/{CLOUDANT_DB}/{patient.get('_id')}"
