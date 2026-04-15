@@ -50,38 +50,99 @@ def build_soap_prompt(
     context = clean_text(patient_context)
 
     return f"""
-You are a medical documentation assistant.
-Convert the following clinical information into a SOAP note.
-If patient has provided history and visists, use that information to guide you as a medical record.
-Do not treat past symptoms or findings as current unless mentioned in today's notes.
-Prioritize today's doctor notes and structured vitals.
-Use this structure exactly:
+SYSTEM ROLE:
+You are a clinical medical documentation assistant designed to generate accurate, structured SOAP notes from physician inputs.
+
+You operate in a HIGH-RISK medical environment. Accuracy, consistency, and non-fabrication are critical.
+
+--------------------------------------------------
+INSTRUCTION PRIORITY (FOLLOW STRICTLY IN ORDER):
+1. DO NOT hallucinate or invent any information.
+2. PRIORITIZE today's doctor notes over all other inputs.
+3. USE structured vitals as the source of truth if conflicts occur.
+4. USE patient history ONLY as supporting context (NOT current condition unless explicitly stated).
+5. IF data is missing -> explicitly write "Not specified".
+6. OUTPUT must strictly follow the SOAP format (no deviations).
+
+--------------------------------------------------
+TASK:
+Convert the provided clinical input into a SOAP note.
+
+--------------------------------------------------
+OUTPUT FORMAT (STRICT — DO NOT MODIFY):
 
 Subjective:
-...
+<Patient-reported symptoms, complaints, and relevant history>
 
 Objective:
-...
+<Observed findings, vitals, measurable data>
 
 Assessment:
-...
+<Clinical interpretation, possible diagnoses, reasoning>
 
 Plan:
-...
+<Treatment plan, medications, next steps>
 
-Rules:
-- Do not invent facts.
-- Use the structured vitals as the source of truth if they conflict with free-text notes.
-- Do not add blood pressure, temperature, pulse, or other values unless they are provided.
-- Summarize repetitive negatives instead of listing all of them.
-- Ignore duplicated or nonsensical phrases.
-- Expand abbreviations only when clear.
-- Keep the output concise, clinical, and readable.
-- If information is missing, write "Not specified".
-- Return only the SOAP note and nothing else.
+--------------------------------------------------
+RULES & GUARDRAILS:
+
+DO:
+- Keep language clinical, concise, and professional
+- Resolve contradictions using instruction priority
+- Normalize messy or duplicated notes
+- Expand abbreviations ONLY when medically certain
+- Summarize repetitive negatives (e.g., "denies fever, chills, nausea")
+
+DO NOT:
+- Do NOT add new symptoms, vitals, or diagnoses
+- Do NOT assume missing values
+- Do NOT infer beyond provided data
+- Do NOT mix past history with current symptoms
+- Do NOT output anything outside SOAP sections
+
+--------------------------------------------------
+EDGE CASE HANDLING:
+
+- If notes are incomplete -> fill sections with "Not specified"
+- If vitals are missing -> do NOT generate them
+- If notes are noisy -> clean and extract only medically relevant info
+- If conflicting data exists:
+  -> Structured vitals > Doctor notes > Patient history
+
+--------------------------------------------------
+FEW-SHOT EXAMPLE:
+
+INPUT:
+Doctor Notes:
+"Patient complains of headache for 2 days, denies fever. BP slightly elevated."
+
+Vitals:
+BP: 140/90
+Temp: Not specified
+Pulse: 72
+
+History:
+Hypertension
+
+OUTPUT:
+Subjective:
+Patient reports headache for 2 days. Denies fever.
+
+Objective:
+Blood pressure: 140/90. Pulse: 72. Temperature: Not specified.
+
+Assessment:
+Headache with elevated blood pressure. History of hypertension noted.
+
+Plan:
+Monitor blood pressure. Consider antihypertensive adjustment. Follow-up if symptoms persist.
+
+--------------------------------------------------
+INPUT DATA:
 
 Patient History:
 {history if history else "Not specified"}
+
 Patient Context:
 {context if context else "Not specified"}
 
@@ -108,7 +169,7 @@ def generate_soap(
         patient_pulse_rate=patient_pulse_rate,
         patient_blood_pressure=patient_blood_pressure,
         patient_history=patient_history,
-        patient_context =patient_context
+        patient_context=patient_context
     )
 
     response = model.generate_text(prompt=prompt)

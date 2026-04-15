@@ -40,7 +40,7 @@ summary_model = ModelInference(
         "min_new_tokens": 0,
         "max_tokens": 1000,
         "stop_sequences": [],
-		"repetition_penalty": 1
+        "repetition_penalty": 1
     }
 )
 
@@ -57,26 +57,117 @@ Here is the information you need to summarize:
 
     """.strip()
     
-def summarization_prompt_context(basic_history, past_records, rfv):
-    return f"""You are a healthcare assistant. Your role is aiding medical professionals by providing concise, easy to read, and detailed summaries of a patient's past medical history.
-    Use bullet points if it helps with concision.
-    Only refer to the information obtained from the retrieved records.
-    If there is no past visit history, report that there is no past history.
-    If there is not sufficient past data to provide a detailed summary, summarize what information was available, and communicate the lack of information to the user.
-    If including medications, include dates prescribed and the duration.
-    Include dates for context.
-    Summarize the basic medical history and past visit records, focusing on most relevant history that would be useful to the upcoming visit, where the patient is most concerned about {rfv}. Not all records provided may be relevant:
-    Basic History:
-    {basic_history}
-    Past Records:
-    {past_records}
-    """.strip()
+def summarization_prompt_context(basic_history, past_records, rfv=None):
+    return f"""SYSTEM ROLE:
+You are a healthcare summarization assistant helping medical professionals quickly understand a patient’s history before a visit.
+
+Your output must be structured, concise, and clinically relevant.
+
+--------------------------------------------------
+INSTRUCTION PRIORITY:
+
+1. ONLY use provided data (NO hallucination)
+2. PRIORITIZE relevance to upcoming visit (Reason for Visit if provided)
+3. SUMMARIZE — do NOT rewrite everything
+4. INCLUDE dates whenever available
+5. If data is insufficient → explicitly state it
+
+--------------------------------------------------
+TASK:
+Generate a structured summary of the patient’s medical history and past visits.
+
+--------------------------------------------------
+OUTPUT FORMAT (STRICT):
+
+Patient Summary:
+
+1. Key Medical History:
+- ...
+
+2. Relevant Past Visits:
+- [Date]&#58; <summary>
+- [Date]&#58; <summary>
+
+3. Medications (if available):
+- Medication (Date prescribed, duration)
+
+4. Key Observations:
+- Patterns, recurring issues, risks
+
+5. Data Gaps:
+- Missing or insufficient information
+
+--------------------------------------------------
+RULES & GUARDRAILS:
+
+DO:
+- Focus on clinically relevant information
+- Prioritize conditions related to: {rfv if rfv else "general health"}
+- Use bullet points for clarity
+- Keep it concise but informative
+- Highlight trends (chronic illness, repeat visits)
+
+DO NOT:
+- Do NOT include irrelevant details
+- Do NOT invent missing history
+- Do NOT assume diagnoses
+- Do NOT repeat raw data verbatim
+
+--------------------------------------------------
+EDGE CASE HANDLING:
+
+- No past records → "No past visit history available"
+- Sparse data → summarize and note limitation
+- Conflicting data → present neutrally without resolving
+
+--------------------------------------------------
+FEW-SHOT EXAMPLE:
+
+INPUT:
+History: Hypertension, Diabetes
+Records:
+- Jan 2024: Routine checkup, BP high
+- Mar 2024: Complained of fatigue
+Medications: Metformin (2023–present)
+
+OUTPUT:
+
+Patient Summary:
+
+1. Key Medical History:
+- Hypertension
+- Diabetes
+
+2. Relevant Past Visits:
+- Jan 2024: Routine checkup, elevated blood pressure
+- Mar 2024: Reported fatigue
+
+3. Medications:
+- Metformin (2023–present)
+
+4. Key Observations:
+- Ongoing hypertension with repeated elevated readings
+
+5. Data Gaps:
+- No recent lab results available
+
+--------------------------------------------------
+INPUT DATA:
+
+Basic History:
+{basic_history if basic_history else "Not specified"}
+
+Past Records:
+{past_records if past_records else "Not specified"}""".strip()
 
 def get_summary(patient_context, rfv = ""):
     if not rfv:
         prompt = summarization_prompt_contextless(patient_context)
     else:
-        prompt = summarization_prompt_context(patient_context, rfv)
+        if isinstance(patient_context, tuple) and len(patient_context) == 2:
+            prompt = summarization_prompt_context(patient_context[0], patient_context[1], rfv)
+        else:
+            prompt = summarization_prompt_context(patient_context, "Not specified", rfv)
     print(prompt)
     try:
         response = summary_model.generate_text(params={
@@ -105,10 +196,11 @@ def get_patient_info_summary_contextless(first_name, last_name, date_of_birth):
         patient_info = search_patient(first_name, last_name, date_of_birth)[0]
         patient_context = build_patient_context_text(patient_info)
         print("Got all needed info")
-        return get_summary(patient_context);
+        return get_summary(patient_context)
     except Exception as e:
         print(f'Error fetching medical data: {e}')
         return ("There was a problem searching the database")
+
 def get_patient_info_summary_context(first_name, last_name, date_of_birth, rfv):
     """
     Searches the database for patient information and history, and returns a tuple: (patient info, patient history). Used when only giver name, DOB, and patient's reason for visit(rfv)
@@ -127,7 +219,7 @@ def get_patient_info_summary_context(first_name, last_name, date_of_birth, rfv):
         basic_medical_info = ('First Name: ' + first_name, 'Last Name: ' + last_name, 'DOB: ' + date_of_birth, 'sex = ' + patient_info.get('sex'), 'age = ' + patient_info.get('age'), patient_info.get('basic_medical_history', []))
         past_visit_history = patient_info.get('previous_visits', [])
         print("Got all needed info")
-        return get_summary(basic_medical_info, past_visit_history, rfv);
+        return get_summary((basic_medical_info, past_visit_history), rfv)
     except Exception as e:
         print(f'Error fetching medical data: {e}')
         return ("There was a problem searching the database")
