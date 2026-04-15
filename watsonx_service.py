@@ -20,10 +20,11 @@ model = ModelInference(
     credentials=credentials,
     project_id=PROJECT_ID,
     params={
-        "decoding_method": "greedy",
-        "max_new_tokens": 300,
-        "temperature": 0.2
-    }
+    "decoding_method": "greedy",
+    "max_new_tokens": 220,
+    "temperature": 0.1,
+    "repetition_penalty": 1.05
+}
 )
 
 def clean_text(value):
@@ -132,10 +133,10 @@ Objective:
 Blood pressure: 140/90. Pulse: 72. Temperature: Not specified.
 
 Assessment:
-Headache with elevated blood pressure. History of hypertension noted.
+Headache. History of hypertension noted.
 
 Plan:
-Monitor blood pressure. Consider antihypertensive adjustment. Follow-up if symptoms persist.
+Monitor blood pressure. Follow-up if symptoms persist.
 
 --------------------------------------------------
 INPUT DATA:
@@ -153,6 +154,21 @@ Structured Vitals:
 
 Doctor Notes:
 {notes if notes else "Not specified"}
+
+Return only the completed SOAP note.
+
+Use exactly these section headers and include all four sections even if some content is "Not specified":
+
+Subjective:
+Objective:
+Assessment:
+Plan:
+
+Do not return a sentence fragment.
+Do not return an explanation.
+Do not return any text before or after the SOAP note.
+
+Begin now.
 """.strip()
 
 def generate_soap(
