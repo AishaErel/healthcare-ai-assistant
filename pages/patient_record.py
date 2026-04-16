@@ -17,14 +17,15 @@ patient = st.session_state.get("selected_patient")
 
 if patient: #demographic info
     if st.button("Generate Patient Summary"):
-        if "rfv" in st.session_state["rfv"] and st.session_state["rfv"]:
-            result = get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), st.session_state["rfv]"])
-        else:
-            result = get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), None)
-        if result:
-            st.write(result)
-        else:
-            st.write("A summary could not be retrieved at this time. See below for retrieved patient records.")
+       # if "rfv" in st.session_state["rfv"] and st.session_state["rfv"]:
+        #    result = get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), st.session_state["rfv]"])
+        #else:
+        #    result = get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), None)
+        #if result:
+        #    st.write(result)
+        #else:
+        #    st.write("A summary could not be retrieved at this time. See below for retrieved patient records.")
+        st.write(get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), None))
 
     # Basic Info
     st.write("### Patient Info")

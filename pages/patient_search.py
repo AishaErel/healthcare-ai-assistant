@@ -39,10 +39,10 @@ if submitted:
                 st.success("Patient found.")
                 patient = results[0]
                 st.session_state["selected_patient"] = patient
-                if patient_rfv and patient_rfv != "":
-                    st.session_state["rfv"] = patient_rfv
-                else:
-                    st.session_state["rfv"]= None
+                #if patient_rfv and patient_rfv != "":
+                #    st.session_state["rfv"] = patient_rfv
+                #else:
+                #    st.session_state["rfv"]= None
 
                 if 'Action' in st.session_state and st.session_state['Action']=='S':
                     st.switch_page("pages/soap_generator.py")

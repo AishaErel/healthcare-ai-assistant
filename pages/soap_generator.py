@@ -102,6 +102,18 @@ with col1:
                     st.error(f"Search error: {e}")
             else:
                 st.warning(soap_json)
+                if st.button("Accept Anyway"):
+                    try:
+                        results = add_patient_record(patient, soap_json)
+                        if results.status_code in (200, 201, 204):
+                            st.write("SOAP record added successfully.")
+                            #Reload patient data
+                            st.session_state['selected_patient'] = search_patient(patient['first_name'], patient['last_name'], patient['date_of_birth'])[0]
+                            st.switch_page("pages/patient_record.py")
+                        else:
+                            st.write(f"Failed to update database: Status code {results.status_code}")
+                    except Exception as e:
+                        st.error(f"Search error: {e}")
         else:
             st.warning("A SOAP note needs to be generated first.")
 with col2:
