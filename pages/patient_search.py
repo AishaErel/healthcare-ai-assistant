@@ -27,7 +27,7 @@ with st.form("patient_search_form"):
     patient_last_name = st.text_input("Please type patient last name", placeholder="Last name")
     patient_dob = st.text_input("Please type patient date of birth", placeholder="YYYY-MM-DD")
     if 'Action' in st.session_state and st.session_state['Action']=='R':
-        patient_rfv = st.text_input("Please enter patient's reason for visit (optional)", placeholder = "Reason For Visit", value = "")
+        st.session_state["rfv"] = st.text_input("Please enter patient's reason for visit (optional)", placeholder = "Reason For Visit", value = None)
     submitted = st.form_submit_button("Retrieve Patient Information")
 
 if submitted:
@@ -39,21 +39,18 @@ if submitted:
                 st.success("Patient found.")
                 patient = results[0]
                 st.session_state["selected_patient"] = patient
-                #if patient_rfv and patient_rfv != "":
-                #    st.session_state["rfv"] = patient_rfv
-                #else:
-                #    st.session_state["rfv"]= None
 
                 if 'Action' in st.session_state and st.session_state['Action']=='S':
                     st.switch_page("pages/soap_generator.py")
                 else:
+                    #st.session_state["rfv"] = patient_rfv
                     st.switch_page("pages/patient_record.py")
 
-                st.write("### Patient Info")
-                st.write(f"Name: {patient['first_name']} {patient['last_name']}")
-                st.write(f"DOB: {patient['date_of_birth']}")
-                st.write(f"Sex: {patient['sex']}")
-                st.write(f"Age: {patient['age']}")
+#                st.write("### Patient Info")
+#                st.write(f"Name: {patient['first_name']} {patient['last_name']}")
+#               st.write(f"DOB: {patient['date_of_birth']}")
+ #               st.write(f"Sex: {patient['sex']}")
+ #               st.write(f"Age: {patient['age']}")
             else:
                 st.warning("No matching patient found.")
 
