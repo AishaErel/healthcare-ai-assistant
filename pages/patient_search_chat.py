@@ -22,7 +22,16 @@ if 'selected_patient' in st.session_state:
     st.sidebar.page_link('pages/manual_soap.py', label='Manual SOAP upload')
     st.sidebar.page_link('pages/update_patient_info.py', label='Update Patient Info')
     st.sidebar.page_link('pages/new_patient.py', label='New Patient')
-
+with st.expander("Sample Patients"):
+    st.markdown("""
+    ### Test Patients:
+    Michael Chen 1975-12-16  
+    Alice Raymond 1999-03-16  
+    Marie Johnson 1989-01-15     
+    Barbara Gordon 1980-02-17  
+    Stephanie Brown 1992-04-11        
+""")
+    
 if "messages" not in st.session_state.keys():  # Initialize the chat messages history
     st.session_state.messages = [
         { "role": "system",
