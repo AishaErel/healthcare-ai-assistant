@@ -4,13 +4,13 @@ from cloudant_service import search_patient
 st.title("Patient Search")
 
 st.sidebar.page_link('streamlit_app.py', label='Home')
-#st.sidebar.page_link('pages/summarization_friend.py', label='RAG-bot')
+st.sidebar.page_link('pages/patient_search_chat.py', label = 'Patient Search Chat')
 if 'selected_patient' in st.session_state:
-    st.sidebar.page_link('pages/soap_generator.py', label='SOAP-bot')
-    st.sidebar.page_link('pages/manual_soap.py', label='SOAP upload')
-    st.sidebar.page_link('pages/new_patient.py', label='New Patient')
     st.sidebar.page_link('pages/patient_record.py', label='Patient Record')
+    st.sidebar.page_link('pages/soap_generator.py', label='SOAP-bot')
+    st.sidebar.page_link('pages/manual_soap.py', label='Manual SOAP upload')
     st.sidebar.page_link('pages/update_patient_info.py', label='Update Patient Info')
+    st.sidebar.page_link('pages/new_patient.py', label='New Patient')
 
 with st.expander("Sample Patients"):
     st.markdown("""
