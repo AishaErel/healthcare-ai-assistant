@@ -161,13 +161,11 @@ Past Records:
 {past_records if past_records else "Not specified"}""".strip()
 
 def get_summary(patient_context, rfv = ""):
-    if not rfv:
-        prompt = summarization_prompt_contextless(patient_context)
+    if isinstance(patient_context, tuple) and len(patient_context) == 2:
+        prompt = summarization_prompt_context(patient_context[0], patient_context[1], rfv)
     else:
-        if isinstance(patient_context, tuple) and len(patient_context) == 2:
-            prompt = summarization_prompt_context(patient_context[0], patient_context[1], rfv)
-        else:
-            prompt = summarization_prompt_context(patient_context, "Not specified", rfv)
+        prompt = summarization_prompt_context(patient_context, "Not specified", rfv)
+
     print(prompt)
     try:
         response = summary_model.generate_text(params={
