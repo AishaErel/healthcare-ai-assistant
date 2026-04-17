@@ -1,6 +1,5 @@
-# pages/soap_generator.py
 import streamlit as st
-from watsonx_service import generate_soap
+from watsonx_service import generate_soap, retry_soap
 from patient_context_for_model import build_patient_context_text
 from cloudant_service import add_patient_record, search_patient
 from soap_converter import soap_note_to_json
@@ -75,7 +74,7 @@ if st.button("Generate SOAP Record"):
                     patient_context=patient_context,
                 )
 
-                st.write("Debug: generate_soap returned type:", type(result).__name__)
+            
 
                 if result is None:
                     st.error("SOAP generator returned None.")
@@ -88,14 +87,16 @@ if st.button("Generate SOAP Record"):
                     if not result:
                         st.error("SOAP generator returned blank output.")
                     else:
-                        st.subheader("Generated SOAP Note")
-                        st.text_area("SOAP Output", value=result, height=300)
                         st.session_state["Stash_SOAP"] = result
 
             except Exception as e:
                 st.error(f"Error: {e}")
     else:
         st.warning("Please enter doctor notes first.")
+
+if "Stash_SOAP" in st.session_state:
+    st.subheader("Generated SOAP Note")
+    st.text_area("SOAP Output", value=st.session_state["Stash_SOAP"], height=300)
 
 st.divider()
 col1, col2, col3 = st.columns(3)
@@ -148,9 +149,24 @@ with col3:
         if "Stash_SOAP" in st.session_state:
             reason = st.text_area("What needs to be different?")
             if st.button("Retry"):
-                if reason:
-                    st.session_state["Reason"] = reason
+                if reason.strip():
+                    with st.spinner("Retrying SOAP note..."):
+                        try:
+                            revised = retry_soap(
+                                existing_soap=st.session_state["Stash_SOAP"],
+                                retry_feedback=reason,
+                                raw_notes=doctor_notes,
+                                patient_body_temp=patient_body_temp,
+                                patient_pulse_rate=patient_pulse_rate,
+                                patient_blood_pressure=patient_blood_pressure,
+                                patient_context=patient_context,
+                            )
+                            st.session_state["Stash_SOAP"] = revised
+                            st.success("SOAP note updated.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Retry error: {e}")
                 else:
-                    st.warning("Use Generate SOAP Record button if you want to retry without input.")
+                    st.warning("Please enter retry feedback.")
         else:
             st.write("Try generating a SOAP note first.")

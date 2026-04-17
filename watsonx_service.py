@@ -1,4 +1,3 @@
-# watsonx_service.py
 import os
 from dotenv import load_dotenv
 from ibm_watsonx_ai.foundation_models import ModelInference
@@ -109,12 +108,83 @@ Return only the SOAP note.
 """.strip()
 
 
+def build_retry_prompt(
+    existing_soap,
+    retry_feedback,
+    raw_notes,
+    patient_body_temp="",
+    patient_pulse_rate="",
+    patient_blood_pressure="",
+    patient_history="",
+    patient_context="",
+) -> str:
+    soap = clean_text(existing_soap)
+    feedback = clean_text(retry_feedback)
+    notes = clean_text(raw_notes)
+    temp = clean_text(patient_body_temp)
+    pulse = clean_text(patient_pulse_rate)
+    bp = clean_text(patient_blood_pressure)
+    history = clean_text(patient_history)
+    context = clean_text(patient_context)
+
+    return f"""
+You are a medical documentation assistant.
+Revise the existing SOAP note using the user's feedback.
+
+Use this structure exactly:
+
+Subjective:
+...
+
+Objective:
+...
+
+Assessment:
+...
+
+Plan:
+...
+
+Rules:
+- Revise the existing SOAP note based on the user's feedback.
+- Keep correct content from the existing SOAP note unless the feedback requires changing it.
+- Use only information explicitly provided in today's doctor notes, structured vitals, patient history, patient context, and the user's feedback.
+- Do not invent facts.
+- Do not include any text before "Subjective:" or after the Plan section.
+- Do not treat past symptoms or past findings as current unless mentioned in today's doctor notes.
+- Use structured vitals as the source of truth if they conflict with free-text notes.
+- Do not add blood pressure, temperature, pulse, medications, diagnoses, tests, follow-up, or treatments unless they are explicitly provided.
+- If information is missing in a section, write "Not specified".
+
+User Feedback:
+{feedback if feedback else "Not specified"}
+
+Existing SOAP Note:
+{soap if soap else "Not specified"}
+
+Patient History:
+{history if history else "Not specified"}
+
+Patient Context:
+{context if context else "Not specified"}
+
+Structured Vitals:
+- Temperature: {temp if temp else "Not specified"}
+- Pulse Rate: {pulse if pulse else "Not specified"}
+- Blood Pressure: {bp if bp else "Not specified"}
+
+Doctor Notes:
+{notes if notes else "Not specified"}
+
+Return only the revised SOAP note.
+""".strip()
+
+
 def sanitize_soap_output(text: str) -> str:
     if not text:
         return ""
 
     lines = [line.rstrip() for line in text.splitlines()]
-    allowed_headers = ("Subjective:", "Objective:", "Assessment:", "Plan:")
 
     start_index = None
     for i, line in enumerate(lines):
@@ -127,13 +197,13 @@ def sanitize_soap_output(text: str) -> str:
 
     kept = []
     for line in lines[start_index:]:
-        stripped = line.strip()
+        stripped = line.strip().lower()
 
-        if stripped.lower().startswith("do not hallucinate"):
+        if stripped.startswith("do not hallucinate"):
             continue
-        if stripped.lower().startswith("rules:"):
+        if stripped.startswith("rules:"):
             continue
-        if stripped.lower().startswith("return only"):
+        if stripped.startswith("return only"):
             continue
 
         kept.append(line)
@@ -147,6 +217,22 @@ def validate_soap_output(text: str) -> str:
     if missing:
         raise ValueError(f"SOAP output missing sections: {', '.join(missing)}")
     return text
+
+
+def _finalize_response(response) -> str:
+    if response is None:
+        raise ValueError("Watsonx returned None")
+
+    if not isinstance(response, str):
+        response = str(response)
+
+    cleaned = sanitize_soap_output(response.strip())
+    validated = validate_soap_output(cleaned)
+
+    if not validated:
+        raise ValueError("Watsonx returned blank SOAP output")
+
+    return validated
 
 
 def generate_soap(
@@ -167,17 +253,29 @@ def generate_soap(
     )
 
     response = model.generate_text(prompt=prompt)
+    return _finalize_response(response)
 
-    if response is None:
-        raise ValueError("Watsonx returned None")
 
-    if not isinstance(response, str):
-        response = str(response)
+def retry_soap(
+    existing_soap,
+    retry_feedback,
+    raw_notes,
+    patient_body_temp="",
+    patient_pulse_rate="",
+    patient_blood_pressure="",
+    patient_history="",
+    patient_context="",
+) -> str:
+    prompt = build_retry_prompt(
+        existing_soap=existing_soap,
+        retry_feedback=retry_feedback,
+        raw_notes=raw_notes,
+        patient_body_temp=patient_body_temp,
+        patient_pulse_rate=patient_pulse_rate,
+        patient_blood_pressure=patient_blood_pressure,
+        patient_history=patient_history,
+        patient_context=patient_context,
+    )
 
-    cleaned = sanitize_soap_output(response.strip())
-    validated = validate_soap_output(cleaned)
-
-    if not validated:
-        raise ValueError("Watsonx returned blank SOAP output")
-
-    return validated
+    response = model.generate_text(prompt=prompt)
+    return _finalize_response(response)
