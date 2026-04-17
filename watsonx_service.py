@@ -1,3 +1,4 @@
+# watsonx_service.py
 import os
 from dotenv import load_dotenv
 from ibm_watsonx_ai.foundation_models import ModelInference
@@ -10,9 +11,18 @@ URL = os.getenv("WATSONX_URL")
 PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
 MODEL_ID = os.getenv("WATSONX_MODEL_ID")
 
+if not API_KEY:
+    raise ValueError("Missing WATSONX_APIKEY")
+if not URL:
+    raise ValueError("Missing WATSONX_URL")
+if not PROJECT_ID:
+    raise ValueError("Missing WATSONX_PROJECT_ID")
+if not MODEL_ID:
+    raise ValueError("Missing WATSONX_MODEL_ID")
+
 credentials = Credentials(
     url=URL,
-    api_key=API_KEY
+    api_key=API_KEY,
 )
 
 model = ModelInference(
@@ -20,20 +30,21 @@ model = ModelInference(
     credentials=credentials,
     project_id=PROJECT_ID,
     params={
-    "decoding_method": "greedy",
-    "max_new_tokens": 220,
-    "temperature": 0.1,
-    "repetition_penalty": 1.05
-}
+        "decoding_method": "greedy",
+        "max_new_tokens": 260,
+        "temperature": 0.1,
+        "repetition_penalty": 1.05,
+    },
 )
 
-def clean_text(value):
-    """Convert tuples/None/other types safely into clean strings."""
+
+def clean_text(value) -> str:
     if value is None:
         return ""
     if isinstance(value, tuple):
         value = value[0] if value else ""
     return str(value).strip()
+
 
 def build_soap_prompt(
     raw_notes,
@@ -41,8 +52,8 @@ def build_soap_prompt(
     patient_pulse_rate="",
     patient_blood_pressure="",
     patient_history="",
-    patient_context =""
-):
+    patient_context="",
+) -> str:
     notes = clean_text(raw_notes)
     temp = clean_text(patient_body_temp)
     pulse = clean_text(patient_pulse_rate)
@@ -51,95 +62,34 @@ def build_soap_prompt(
     context = clean_text(patient_context)
 
     return f"""
-SYSTEM ROLE:
-You are a clinical medical documentation assistant designed to generate accurate, structured SOAP notes from physician inputs.
+You are a medical documentation assistant.
+Convert the clinical information below into a SOAP note.
 
-You operate in a HIGH-RISK medical environment. Accuracy, consistency, and non-fabrication are critical.
-
---------------------------------------------------
-INSTRUCTION PRIORITY (FOLLOW STRICTLY IN ORDER):
-1. DO NOT hallucinate or invent any information.
-2. PRIORITIZE today's doctor notes over all other inputs.
-3. USE structured vitals as the source of truth if conflicts occur.
-4. USE patient history ONLY as supporting context (NOT current condition unless explicitly stated).
-5. IF data is missing -> explicitly write "Not specified".
-6. OUTPUT must strictly follow the SOAP format (no deviations).
-
---------------------------------------------------
-TASK:
-Convert the provided clinical input into a SOAP note.
-
---------------------------------------------------
-OUTPUT FORMAT (STRICT — DO NOT MODIFY):
+Use this structure exactly:
 
 Subjective:
-<Patient-reported symptoms, complaints, and relevant history>
+...
 
 Objective:
-<Observed findings, vitals, measurable data>
+...
 
 Assessment:
-<Clinical interpretation, possible diagnoses, reasoning>
+...
 
 Plan:
-<Treatment plan, medications, next steps>
+...
 
---------------------------------------------------
-RULES & GUARDRAILS:
-
-DO:
-- Keep language clinical, concise, and professional
-- Resolve contradictions using instruction priority
-- Normalize messy or duplicated notes
-- Expand abbreviations ONLY when medically certain
-- Summarize repetitive negatives (e.g., "denies fever, chills, nausea")
-
-DO NOT:
-- Do NOT add new symptoms, vitals, or diagnoses
-- Do NOT assume missing values
-- Do NOT infer beyond provided data
-- Do NOT mix past history with current symptoms
-- Do NOT output anything outside SOAP sections
-
---------------------------------------------------
-EDGE CASE HANDLING:
-
-- If notes are incomplete -> fill sections with "Not specified"
-- If vitals are missing -> do NOT generate them
-- If notes are noisy -> clean and extract only medically relevant info
-- If conflicting data exists:
-  -> Structured vitals > Doctor notes > Patient history
-
---------------------------------------------------
-FEW-SHOT EXAMPLE:
-
-INPUT:
-Doctor Notes:
-"Patient complains of headache for 2 days, denies fever. BP slightly elevated."
-
-Vitals:
-BP: 140/90
-Temp: Not specified
-Pulse: 72
-
-History:
-Hypertension
-
-OUTPUT:
-Subjective:
-Patient reports headache for 2 days. Denies fever.
-
-Objective:
-Blood pressure: 140/90. Pulse: 72. Temperature: Not specified.
-
-Assessment:
-Headache. History of hypertension noted.
-
-Plan:
-Monitor blood pressure. Follow-up if symptoms persist.
-
---------------------------------------------------
-INPUT DATA:
+Rules:
+- Use only information explicitly provided in today's doctor notes, structured vitals, patient history, and patient context.
+- Do not invent facts.
+- Do not repeat these instructions.
+- Do not include any text before "Subjective:" or after the Plan section.
+- Do not treat past symptoms or past findings as current unless mentioned in today's doctor notes.
+- Use structured vitals as the source of truth if they conflict with free-text notes.
+- Do not add blood pressure, temperature, pulse, medications, diagnoses, tests, follow-up, or treatments unless they are explicitly provided.
+- Patient history and patient context may be used only as background context. Do not convert old history into today's symptoms or today's plan unless explicitly stated.
+- Keep the output concise, clinical, and readable.
+- If information is missing in a section, write "Not specified".
 
 Patient History:
 {history if history else "Not specified"}
@@ -155,21 +105,49 @@ Structured Vitals:
 Doctor Notes:
 {notes if notes else "Not specified"}
 
-Return only the completed SOAP note.
-
-Use exactly these section headers and include all four sections even if some content is "Not specified":
-
-Subjective:
-Objective:
-Assessment:
-Plan:
-
-Do not return a sentence fragment.
-Do not return an explanation.
-Do not return any text before or after the SOAP note.
-
-Begin now.
+Return only the SOAP note.
 """.strip()
+
+
+def sanitize_soap_output(text: str) -> str:
+    if not text:
+        return ""
+
+    lines = [line.rstrip() for line in text.splitlines()]
+    allowed_headers = ("Subjective:", "Objective:", "Assessment:", "Plan:")
+
+    start_index = None
+    for i, line in enumerate(lines):
+        if line.strip().startswith("Subjective:"):
+            start_index = i
+            break
+
+    if start_index is None:
+        return text.strip()
+
+    kept = []
+    for line in lines[start_index:]:
+        stripped = line.strip()
+
+        if stripped.lower().startswith("do not hallucinate"):
+            continue
+        if stripped.lower().startswith("rules:"):
+            continue
+        if stripped.lower().startswith("return only"):
+            continue
+
+        kept.append(line)
+
+    return "\n".join(kept).strip()
+
+
+def validate_soap_output(text: str) -> str:
+    required_headers = ["Subjective:", "Objective:", "Assessment:", "Plan:"]
+    missing = [header for header in required_headers if header not in text]
+    if missing:
+        raise ValueError(f"SOAP output missing sections: {', '.join(missing)}")
+    return text
+
 
 def generate_soap(
     raw_notes,
@@ -177,16 +155,29 @@ def generate_soap(
     patient_pulse_rate="",
     patient_blood_pressure="",
     patient_history="",
-    patient_context ="",
-):
+    patient_context="",
+) -> str:
     prompt = build_soap_prompt(
         raw_notes=raw_notes,
         patient_body_temp=patient_body_temp,
         patient_pulse_rate=patient_pulse_rate,
         patient_blood_pressure=patient_blood_pressure,
         patient_history=patient_history,
-        patient_context=patient_context
+        patient_context=patient_context,
     )
 
     response = model.generate_text(prompt=prompt)
-    return response
+
+    if response is None:
+        raise ValueError("Watsonx returned None")
+
+    if not isinstance(response, str):
+        response = str(response)
+
+    cleaned = sanitize_soap_output(response.strip())
+    validated = validate_soap_output(cleaned)
+
+    if not validated:
+        raise ValueError("Watsonx returned blank SOAP output")
+
+    return validated
