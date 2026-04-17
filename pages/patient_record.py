@@ -37,7 +37,7 @@ if patient: #demographic info
 
     if history: #allergies, etc
         st.write("**Conditions:**", history.get("conditions", ""))
-        st.write(f"**Medications:** {history.get('medications')}")
+        st.write("**Medications:**", history.get('medications', ""))
         st.write("**Allergies:**", history.get("allergies", ""))
         st.write("**Notes:**", history.get("notes", ""))
     else:
