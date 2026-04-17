@@ -6,28 +6,95 @@ AI-powered healthcare assistant built with IBM watsonx and IBM Cloudant database
 ## The Goal:
 Create an AI system that reduces the administrative workload for medical professionals. We specifically aim to reduce the workload involved in retrieving and reviewing medical history as well as the process of formalizing the notes taken during the appointment. Reducing the administrative workload will enable the medical professional to focus more on patient care and their own well-being.
 
+-----
 
-## Interface plan (tentative):
-### Intro Page:
+## Agents:
+
+### Documentation Agent (watsonx_service):
+Input: Doctor notes, patient historical records and basic medical info retrieved from database
+Output: SOAP note
+Model: ibm/granite-4-h-small
+
+### Summarization Agent (sumary_model):
+Input: patient historical and basic medical info retrieved from database, optionally the patient's reason for visiting
+Output: Summary of patient's medical history. If a reason for visiting is provided, the summary will emphasize anything in the past history that is relevant
+Model: meta-llama/llama-3-3-70b-instruct
+
+### Chatbot Model (chatbot_search):
+Input: User messages
+Output: Tool call
+Tools: 
+- missing_info (if user is missing one of first name, last name, dob, returns reason model decided it couldn't do a database search)
+- patient_search_wrapper(takes first name, last name, dob, and reason for visit (if provided), searches database. Redirects if patient is found, otherwise asks user if they want to create a new patient)
+- new_patient_redirect(redirects user to new_patient page)
+Model: ibm/granite-4-h-small
+-----
+## Interface:
+### Intro Page (streamlit_app):
 Purpose:
-- Redirect to summarization agent
-- Redirect to documentation agent
+- Redirect user to the patient search. There are 2 search pages:
+- Form search-- A form input that facilitates patient search
+- Chat search-- chatbot that facilitates patient search
+
+*All the following interface pages are found under the pages folder:*
+### Search Page -- Form (patient_search):
+Takes in patient first name, last name, and date of birth, then searches the database for the patient information. If found, sets the patient in the session_state so that patient info is accessible on all pages. Also has a button that redirects to new_patient if user needs to add a new patient's record
+If accessed through "Retrieve Patient Records" button on home page:
+  - also accepts Reason For Visit as optional input
+  - redirects to patient_records page after patient is found
+If accessed through "Generate SOAP note" button on home page:
+  - redirects to soap_generator page
 
 
-### Summarization agent:
-Description: takes patient first and last name + DOB to query database for patient info/history + summary. May be supplied Reason for Visit which is the context
-Tools:
-- Ensure All Needed Information is present
-- Get Patient Summary without Context
-- Get Patient Summary with Context
+### Search Page -- Chat (patient_search_chat):
+Requests patient first name, last name, and date of birth, then searches the database for the patient information. If found, sets the patient in the session_state so that patient info is accessible on all pages. If patient is not found, asks user if they want to create a new patient record. If given the affirmative, redirects to the new_patient page.
+If accessed through "Retrieve Patient Records" button on home page:
+  - also asks for Reason For Visit as optional input
+  - redirects to patient_records page after patient is found
+If accessed through "Generate SOAP note" button on home page:
+  - redirects to soap_generator page
 
-### Documentation agent:
-Description: takes doctor notes and tries to generate formal SOAP note documentation. Uploads this to the database when approved
-Tools:
-- Obtain Context
-- Generate soap note
-- Upload soap note to patient file in database
+### Patient Record (patient_record):
+- At the top has a button to generate a patient's summary. Sends request our summarization agent, giving patient's basic medical info and past visit records, as well as the optional Reason For Visit as documents to summarize.
+- Below the generate patient summary button, prints the patient's basic medical information and past visit history.
+- At the bottom are buttons to "Start Consultation" (redirects to soap_generator page), "Update Basic Info" (redirects to update_patient_info), and "Back to Search" which returns to the search page.
 
+### Soap Generator (soap_generator):
+- Features a form where doctor notes can be input. When the "Generate Soap Note" button is pressed, it sends a request to our documentation agent with the patient's record and the doctor's notes. Once a record has been generated, the user can use the 3 buttons for next steps:
+- "Accept" button uploads the SOAP note that was generated directly to the database. Redirects user to patient_record page after successful upload
+- "Manually Edit" button copies the SOAP note to the manual_soap page, where the user can manually edit the generated soap note
+- "Retry" button allows the user to enter a correction they'd like the model to make when it retries to generate the soap note
+
+### Manual Soap Editor (manual_soap):
+- If redirected from the soap_generator page, allows user to edit the soap note that was generated by the documentation agent. Otherwise, offers a blank text input for the user to enter a SOAP note.
+- "Upload SOAP note" button uploads the soap note to the database, and redirects to patient_record page upon success
+
+### New Patient (new_patient):
+- form submission to enable user to upload new patient record to database
+  
+### Update Patient Info (update_patient_info):
+- form submission to enable user to update the patient's basic medical information
+-----
+## Backend Files:
+### chatbot_search:
+- Chatbot model used for patient chat search (pages/patient_search_chat)
+  
+### cloudant_service:
+- contains the functions used to connect to the database
+
+### patient_context_for_model:
+- converts output from patient search requests to the database to a form that is friendlier
+
+### soap_converter:
+- takes a string version of a soap record and converts it to a dict with the standardized headers as keys (Subjective, Objective, Assessment, Plan)
+- Used to facilitate data is uploaded to database as json
+
+### summary_model:
+- Summary agent used for summarization in patient record page (pages/patient_record)
+
+### watsonx_service:
+- Documentation agent used for SOAP note generation in soap generator (pages/soap_generator)
+-----
 ## What Has Been Implemented:
 ### (Week 6):
 A chatbot interface has been implemented for the Summarization Agent. The Agent requests first and last name, as well as date of birth. The summarization agent is also capable of summarizing a patient's medical history, though this wasn't linked to the chatbot. The documentation agent could take doctor notes about the patient appointment and generate a SOAP note from them.
@@ -40,11 +107,13 @@ The Summarization Agent Chatbot interface now has tools linked, so it can take u
 - U/I improvements--Implemented front page, added some changes to link pages. Altered sidebar to only display pages that are valid (some pages don't have content unless a patient is loaded into the session_state)
 - Parse user input and maybe documentation agent to manual SOAP as json
 - Chatbot Search Function
-  
-## What Is Left:
-- Prompt Fine Tuning -- Both the summarization agent and the documentation agent have some issues with inconsistent output, though this is more egregious with the summarization agent. We will try further fine tuning and switching from zero-shot to one-shot or few-shot prompting in the coming week to resolve this.
+- - Prompt Fine Tuning -- Both the summarization agent and the documentation agent have some issues with inconsistent output, though this is more egregious with the summarization agent. We will try further fine tuning and switching from zero-shot to one-shot or few-shot prompting in the coming week to resolve this.
 - Documentation Agent
 - -- Try again loop
 - -- Confirm JSON parser works for Model Output (probably does)
 - Implement integration of reason for visit through both form and chat patient search
+ ----- 
+## What Is Left:
+- Removal of unnecessary files, and clean-up of code lines that were deprecated as progress was made
+- App deployment
 
