@@ -14,18 +14,15 @@ if 'selected_patient' in st.session_state:
 
 # Get selected patient from session
 patient = st.session_state.get("selected_patient")
+if "rfv" in st.session_state and st.session_state['rfv']:
+            st.write(f"Reason for visit: {st.session_state['rfv']}")
 
 if patient: #demographic info
     if st.button("Generate Patient Summary"):
-       # if "rfv" in st.session_state["rfv"] and st.session_state["rfv"]:
-        #    result = get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), st.session_state["rfv]"])
-        #else:
-        #    result = get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), None)
-        #if result:
-        #    st.write(result)
-        #else:
-        #    st.write("A summary could not be retrieved at this time. See below for retrieved patient records.")
-        st.write(get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), None))
+        if "rfv" in st.session_state:
+            st.write(get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")), st.session_state['rfv']))
+        else:
+            st.write(get_summary((patient.get("basic_medical_history"), patient.get("previous_visits")),None))
 
     # Basic Info
     st.write("### Patient Info")
@@ -40,7 +37,7 @@ if patient: #demographic info
 
     if history: #allergies, etc
         st.write("**Conditions:**", history.get("conditions", ""))
-        st.write(f"**Medications:** {history.get('medications')}")
+        st.write("**Medications:**", history.get('medications', ""))
         st.write("**Allergies:**", history.get("allergies", ""))
         st.write("**Notes:**", history.get("notes", ""))
     else:
