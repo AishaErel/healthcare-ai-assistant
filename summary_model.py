@@ -36,11 +36,11 @@ summary_model = ModelInference(
     credentials=credentials,
     project_id=PROJECT_ID,
     params={
-        "temperature": 0.2,
-        "min_new_tokens": 0,
-        "max_tokens": 1000,
-        "stop_sequences": [],
-        "repetition_penalty": 1
+        "decoding_method": "greedy",
+        "max_new_tokens": 500,
+        "temperature": 0,
+        "repetition_penalty": 1.05,
+        "stop_sequences": ["<|eom_id|>"]
     }
 )
 
@@ -168,9 +168,10 @@ def get_summary(patient_context, rfv = ""):
 
     print(prompt)
     try:
-        response = summary_model.generate_text(params={
-            "decoding_method": "greedy"
-        }, guardrails = False, prompt=prompt)
+        response = summary_model.generate_text(
+            guardrails=False,
+            prompt=prompt
+        )
         if response == '':
             return f"Patient Info: {json.dumps(patient_context, indent = 4)}"
     except Exception as e:
