@@ -25,7 +25,7 @@ nlp_model = ModelInference(
     }
 )
 
-def patient_search_wrapper(first_name, last_name, date_of_birth, rfv = ""):
+def patient_search_wrapper(first_name, last_name, date_of_birth, rfv = None):
     """
     Used to search for a patient, and if a patient is found, redirects user to the page they need
     Parameters:
@@ -45,6 +45,7 @@ def patient_search_wrapper(first_name, last_name, date_of_birth, rfv = ""):
         if 'Action' in st.session_state and st.session_state['Action']=='S':
             st.switch_page("pages/soap_generator.py")
         else:
+            st.session_state['rfv'] = rfv
             st.switch_page("pages/patient_record.py")
     else:
         return "Failed to find patient. Would you like to create a new patient?"
