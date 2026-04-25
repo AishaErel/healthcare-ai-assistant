@@ -6,10 +6,10 @@ from ibm_watsonx_ai import Credentials
 from cloudant_service import search_patient
 import streamlit as st
 
-API_KEY = st.secrets("WATSONX_APIKEY") or os.getenv("WATSONX_APIKEY")
-URL = st.secrets("WATSONX_URL") or os.getenv("WATSONX_URL")
-PROJECT_ID = st.secrets("WATSONX_PROJECT_ID") or os.getenv("WATSONX_PROJECT_ID")
-MODEL_ID = st.secrets("WATSONX_MODEL_ID") or os.getenv("WATSONX_MODEL_ID")
+API_KEY = st.secrets["WATSONX_APIKEY"] or os.getenv["WATSONX_APIKEY"]
+URL = st.secrets["WATSONX_URL"] or os.getenv["WATSONX_URL"]
+PROJECT_ID = st.secrets["WATSONX_PROJECT_ID"] or os.getenv["WATSONX_PROJECT_ID"]
+MODEL_ID = st.secrets["WATSONX_MODEL_ID"] or os.getenv["WATSONX_MODEL_ID"]
 
 credentials = Credentials(
     url=URL,
