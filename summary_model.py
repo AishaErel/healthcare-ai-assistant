@@ -108,6 +108,7 @@ DO:
 - Highlight trends (chronic illness, repeat visits)
 
 DO NOT:
+- Do NOT make it a email or provide a email signature
 - Do NOT include irrelevant details
 - Do NOT invent missing history
 - Do NOT assume diagnoses
