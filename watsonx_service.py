@@ -2,13 +2,14 @@ import os
 from dotenv import load_dotenv
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai import Credentials
+import streamlit as st
 
 load_dotenv()
 
-API_KEY = os.getenv("WATSONX_APIKEY")
-URL = os.getenv("WATSONX_URL")
-PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
-MODEL_ID = os.getenv("WATSONX_MODEL_ID")
+API_KEY = st.secrets["WATSONX_APIKEY"] or os.getenv["WATSONX_APIKEY"]
+URL = st.secrets["WATSONX_URL"] or os.getenv["WATSONX_URL"] 
+PROJECT_ID = st.secrets["WATSONX_PROJECT_ID"] or os.getenv["WATSONX_PROJECT_ID"]
+MODEL_ID = st.secrets["WATSONX_MODEL_ID"] or os.getenv["WATSONX_MODEL_ID"]
 
 if not API_KEY:
     raise ValueError("Missing WATSONX_APIKEY")

@@ -2,13 +2,14 @@ import os
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
+import streamlit as st
 
 load_dotenv()
 
-CLOUDANT_URL = os.getenv("CLOUDANT_URL")
-CLOUDANT_APIKEY = os.getenv("CLOUDANT_APIKEY")
-CLOUDANT_APIKEY_READER = os.getenv("CLOUDANT_APIKEY_READER")
-CLOUDANT_DB = os.getenv("CLOUDANT_DB")
+CLOUDANT_URL = st.secrets("CLOUDANT_URL") or os.getenv("CLOUDANT_URL") 
+CLOUDANT_APIKEY = st.secrets("CLOUDANT_APIKEY") or os.getenv("CLOUDANT_APIKEY")
+CLOUDANT_APIKEY_READER = st.secrets("CLOUDANT_APIKEY_READER") or os.getenv("CLOUDANT_APIKEY_READER")
+CLOUDANT_DB = st.secrets("CLOUDANT_DB") or os.getenv("CLOUDANT_DB")
 
 def get_iam_token(reader = True):
     token_url = "https://iam.cloud.ibm.com/identity/token"
