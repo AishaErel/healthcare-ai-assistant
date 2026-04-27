@@ -1,4 +1,5 @@
 import os
+import re
 from dotenv import load_dotenv
 from ibm_watsonx_ai.foundation_models import ModelInference
 from ibm_watsonx_ai import Credentials
@@ -63,7 +64,7 @@ def build_soap_prompt(
 
     return f"""
 You are a medical documentation assistant.
-Convert the clinical information below into a SOAP note.
+Convert the clinical information below into exactly one SOAP note.
 
 Use this structure exactly:
 
@@ -80,10 +81,15 @@ Plan:
 ...
 
 Rules:
+- Return exactly one SOAP note.
+- While writing the "Plan" section, make sure to bullet point or number out the all steps
 - Use only information explicitly provided in today's doctor notes, structured vitals, patient history, and patient context.
 - Do not invent facts.
 - Do not repeat these instructions.
 - Do not include any text before "Subjective:" or after the Plan section.
+- Do not repeat any section.
+- Stop after the Plan section.
+- Do not start a second "Subjective:" section.
 - Do not treat past symptoms or past findings as current unless mentioned in today's doctor notes.
 - Use structured vitals as the source of truth if they conflict with free-text notes.
 - Do not add blood pressure, temperature, pulse, medications, diagnoses, tests, follow-up, or treatments unless they are explicitly provided.
@@ -147,11 +153,15 @@ Plan:
 ...
 
 Rules:
+- Return exactly one SOAP note.
 - Revise the existing SOAP note based on the user's feedback.
 - Keep correct content from the existing SOAP note unless the feedback requires changing it.
 - Use only information explicitly provided in today's doctor notes, structured vitals, patient history, patient context, and the user's feedback.
 - Do not invent facts.
 - Do not include any text before "Subjective:" or after the Plan section.
+- Do not repeat any section.
+- Stop after the Plan section.
+- Do not start a second "Subjective:" section.
 - Do not treat past symptoms or past findings as current unless mentioned in today's doctor notes.
 - Use structured vitals as the source of truth if they conflict with free-text notes.
 - Do not add blood pressure, temperature, pulse, medications, diagnoses, tests, follow-up, or treatments unless they are explicitly provided.
@@ -185,31 +195,63 @@ def sanitize_soap_output(text: str) -> str:
     if not text:
         return ""
 
-    lines = [line.rstrip() for line in text.splitlines()]
+    text = str(text).strip()
 
-    start_index = None
-    for i, line in enumerate(lines):
-        if line.strip().startswith("Subjective:"):
-            start_index = i
-            break
-
-    if start_index is None:
+    first_subjective = re.search(r"(?im)^subjective\s*:", text)
+    if not first_subjective:
         return text.strip()
 
-    kept = []
-    for line in lines[start_index:]:
-        stripped = line.strip().lower()
+    text = text[first_subjective.start():]
 
-        if stripped.startswith("do not hallucinate"):
-            continue
+    cleaned_lines = []
+    for line in text.splitlines():
+        stripped = line.strip().lower()
         if stripped.startswith("rules:"):
             continue
         if stripped.startswith("return only"):
             continue
+        if stripped.startswith("do not hallucinate"):
+            continue
+        cleaned_lines.append(line.rstrip())
 
-        kept.append(line)
+    return "\n".join(cleaned_lines).strip()
 
-    return "\n".join(kept).strip()
+
+def normalize_soap_sections(text: str) -> str:
+    if not text:
+        raise ValueError("SOAP output is empty")
+
+    pattern = re.compile(
+        r"(?is)"
+        r"subjective\s*:\s*(.*?)"
+        r"objective\s*:\s*(.*?)"
+        r"assessment\s*:\s*(.*?)"
+        r"plan\s*:\s*(.*)"
+    )
+
+    match = pattern.search(text)
+    if not match:
+        raise ValueError("Could not parse SOAP sections")
+
+    subjective = match.group(1).strip() or "Not specified"
+    objective = match.group(2).strip() or "Not specified"
+    assessment = match.group(3).strip() or "Not specified"
+    plan = match.group(4).strip() or "Not specified"
+
+    duplicate_start = re.search(r"(?im)^subjective\s*:", plan)
+    if duplicate_start:
+        plan = plan[:duplicate_start.start()].strip() or "Not specified"
+
+    objective = re.sub(r"(?im)^objective\s*:\s*", "", objective).strip()
+    assessment = re.sub(r"(?im)^assessment\s*:\s*", "", assessment).strip()
+    plan = re.sub(r"(?im)^plan\s*:\s*", "", plan).strip()
+
+    return (
+        f"Subjective:\n{subjective}\n\n"
+        f"Objective:\n{objective}\n\n"
+        f"Assessment:\n{assessment}\n\n"
+        f"Plan:\n{plan}"
+    )
 
 
 def validate_soap_output(text: str) -> str:
@@ -227,10 +269,11 @@ def _finalize_response(response) -> str:
     if not isinstance(response, str):
         response = str(response)
 
-    cleaned = sanitize_soap_output(response.strip())
-    validated = validate_soap_output(cleaned)
+    cleaned = sanitize_soap_output(response)
+    normalized = normalize_soap_sections(cleaned)
+    validated = validate_soap_output(normalized)
 
-    if not validated:
+    if not validated.strip():
         raise ValueError("Watsonx returned blank SOAP output")
 
     return validated
