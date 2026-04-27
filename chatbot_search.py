@@ -6,10 +6,10 @@ from ibm_watsonx_ai import Credentials
 from cloudant_service import search_patient
 import streamlit as st
 
-API_KEY = st.secrets["WATSONX_APIKEY"] or os.getenv["WATSONX_APIKEY"]
-URL = st.secrets["WATSONX_URL"] or os.getenv["WATSONX_URL"]
-PROJECT_ID = st.secrets["WATSONX_PROJECT_ID"] or os.getenv["WATSONX_PROJECT_ID"]
-MODEL_ID = st.secrets["WATSONX_MODEL_ID"] or os.getenv["WATSONX_MODEL_ID"]
+API_KEY = st.secrets["WATSONX_APIKEY"] or os.getenv("WATSONX_APIKEY")
+URL = st.secrets["WATSONX_URL"] or os.getenv("WATSONX_URL")
+PROJECT_ID = st.secrets["WATSONX_PROJECT_ID"] or os.getenv("WATSONX_PROJECT_ID")
+MODEL_ID = st.secrets["WATSONX_MODEL_ID"] or os.getenv("WATSONX_MODEL_ID")
 
 credentials = Credentials(
     url=URL,
@@ -41,7 +41,7 @@ def patient_search_wrapper(first_name, last_name, date_of_birth, rfv = None):
     result = search_patient(first_name, last_name, date_of_birth)
     if result:
         st.session_state["selected_patient"] = result[0]
-
+        del st.session_state["messages"]
         if 'Action' in st.session_state and st.session_state['Action']=='S':
             st.switch_page("pages/soap_generator.py")
         else:
