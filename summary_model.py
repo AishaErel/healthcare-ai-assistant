@@ -12,7 +12,7 @@ load_dotenv()
 API_KEY = st.secrets["WATSONX_APIKEY"] or os.getenv["WATSONX_APIKEY"]
 URL = st.secrets["WATSONX_URL"] or os.getenv["WATSONX_URL"]
 PROJECT_ID = st.secrets["WATSONX_PROJECT_ID"] or os.getenv["WATSONX_PROJECT_ID"]
-MODEL_ID = st.secrets["LLAMA_MODEL_ID"] or os.getenv["LLAMA_MODEL_ID"]
+MODEL_ID = st.secrets["WATSONX_MODEL_ID"] or os.getenv["WATSONX_MODEL_ID"]
 
 credentials = Credentials(
     url=URL,
