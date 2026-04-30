@@ -112,8 +112,6 @@ The Summarization Agent Chatbot interface now has tools linked, so it can take u
 - -- Try again loop
 - -- Confirm JSON parser works for Model Output (probably does)
 - Implement integration of reason for visit through both form and chat patient search
- ----- 
-## What Is Left:
-- Removal of unnecessary files, and clean-up of code lines that were deprecated as progress was made
 - App deployment
+ ----- 
 
