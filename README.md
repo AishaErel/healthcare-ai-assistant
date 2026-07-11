@@ -6,6 +6,13 @@ AI-powered healthcare assistant built with IBM watsonx and IBM Cloudant database
 ## The Goal:
 Create an AI system that reduces the administrative workload for medical professionals. We specifically aim to reduce the workload involved in retrieving and reviewing medical history as well as the process of formalizing the notes taken during the appointment. Reducing the administrative workload will enable the medical professional to focus more on patient care and their own well-being.
 
+## Team Members:
+Worked as a team of 3,
+Aisha Erel (team lead)
+Catharina Castillo
+Florian Reihl
+
+
 -----
 
 ## Agents:
