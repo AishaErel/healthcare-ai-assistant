@@ -2,7 +2,7 @@
 
 ## What This Is:
 AI-powered healthcare assistant built with IBM watsonx and IBM Cloudant database, designed to support doctors by providing efficient access to patient records, enabling the creation of new records, and converting consultation notes into structured medical documentation for an IBM Skills Build AI Experimental Lab Spring 2026 Project
-## Streamlit Link: https://healthcare-ai-assistant-s9xmssbnep8gwdtupw6hor.streamlit.app/
+## Streamlit Demo: This project was developed using IBM Cloud services provided through the IBM SkillsBuild program. The program credentials expired after the project concluded, so functionality requiring IBM-hosted models or Cloudant database access is no longer available in the public demo. The repository contains the original implementation and architecture for review. https://healthcare-ai-assistant-s9xmssbnep8gwdtupw6hor.streamlit.app/
 ## The Goal:
 Create an AI system that reduces the administrative workload for medical professionals. We specifically aim to reduce the workload involved in retrieving and reviewing medical history as well as the process of formalizing the notes taken during the appointment. Reducing the administrative workload will enable the medical professional to focus more on patient care and their own well-being.
 
